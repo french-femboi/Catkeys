@@ -85,6 +85,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+              Image.asset(
+                'assets/img/logo.png',
+                width: 100,
+                height: 100,
+              ),
             Text(
               'Catkeys',
               style: TextStyle(
