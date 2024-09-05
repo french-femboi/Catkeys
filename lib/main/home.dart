@@ -3,9 +3,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:misskey_dart/misskey_dart.dart';
+import 'package:toastification/toastification.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../pre/setup.dart';
 
@@ -113,7 +116,18 @@ class _HomePageState extends State<HomePage> {
     await Haptics.vibrate(HapticsType.success);
   }
 
-  createNote() async {}
+  createNote() async {
+    String content = _noteController.text;
+    try {
+      await client.notes.create(
+        NotesCreateRequest(
+          text: content,
+        ),
+      );
+    } catch (e) {
+      print('Error creating note: $e');
+    }
+  }
 
   Future<List<Note>> fetchNotes() async {
     try {
@@ -124,7 +138,7 @@ class _HomePageState extends State<HomePage> {
       );
       print('Notes fetched: ${response.length}');
       print('Full response: $response');
-      return response.toList(); 
+      return response.toList();
     } catch (e) {
       return []; // Return an empty list on error
     }
@@ -175,6 +189,16 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const PopupMenuItem(
+                    value: 'Reload Notes',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh_rounded),
+                        SizedBox(width: 10),
+                        Text('Reload notes'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
                     value: 'Source Code',
                     child: Row(
                       children: [
@@ -196,11 +220,22 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ];
               },
-              onSelected: (value) {
+              onSelected: (value) async {
                 if (value == 'Settings') {
                   // Do something for option 1
+                } else if (value == 'Reload Notes') {
+                  vibrateSel();
+                  setState(() {
+                    currentPageIndex = 1;
+                    currentPageIndex = 0;
+                  });
                 } else if (value == 'Source Code') {
-                  // Do something for option 2
+                    const url = 'https://github.com/french-femboi/Catkeys';
+                    if (await canLaunch(url)) {
+                      await launch(url);
+                    } else {
+                      throw 'Could not launch $url';
+                    }
                 } else if (value == 'Log Out') {
                   vibrate();
                   showDialog(
@@ -276,17 +311,18 @@ class _HomePageState extends State<HomePage> {
                             itemBuilder: (context, index) {
                               final note = snapshot.data![index];
                               return Column(
-                              children: [
-                                ListTile(
-                                title: Text(note.user.name ?? 'Unknown user'),
-                                subtitle: Text(note.text ?? 'No text'),
-                                leading: CircleAvatar(
-                                  backgroundImage: NetworkImage(
-                                    (note.user.avatarUrl).toString()),
-                                ),
-                                ),
-                                Divider(), // Add a divider at the bottom
-                              ],
+                                children: [
+                                  ListTile(
+                                    title:
+                                        Text(note.user.name ?? 'Unknown user'),
+                                    subtitle: Text(note.text ?? 'No text'),
+                                    leading: CircleAvatar(
+                                      backgroundImage: NetworkImage(
+                                          (note.user.avatarUrl).toString()),
+                                    ),
+                                  ),
+                                  Divider(), // Add a divider at the bottom
+                                ],
                               );
                             },
                           );
@@ -538,6 +574,7 @@ class _HomePageState extends State<HomePage> {
                         actions: [
                           TextButton(
                             onPressed: () {
+                              vibrateSel();
                               Navigator.of(context).pop();
                             },
                             child: const Text('Cancel'),
@@ -545,7 +582,27 @@ class _HomePageState extends State<HomePage> {
                           TextButton(
                             onPressed: () {
                               vibrateSel();
+                              createNote();
                               Navigator.of(context).pop();
+
+                              Fluttertoast.showToast(
+                                msg: 'Note posted successfully!',
+                                toastLength: Toast.LENGTH_LONG,
+                                gravity: ToastGravity.TOP,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                                textColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                              );
+
+                              Future.delayed(const Duration(seconds: 2), () {
+                                setState(() {
+                                  currentPageIndex = 1;
+                                  currentPageIndex = 0;
+                                });
+                              });
                             },
                             child: const Text('Post'),
                           ),
@@ -554,10 +611,9 @@ class _HomePageState extends State<HomePage> {
                     },
                   );
                 },
-                child: const Icon(Icons.edit_rounded),
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainer, // Customize the background color here
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+                child: const Icon(
+                    Icons.edit_rounded), // Customize the background color here
               )
             : null,
         bottomNavigationBar: SizedBox(
