@@ -1,8 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:mimi/mimi.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:misskey_dart/misskey_dart.dart';
 
 import '../pre/setup.dart';
 
@@ -40,17 +41,22 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late Misskey client;
   String url = '';
   String token = '';
   int currentPageIndex = 0;
-  String profilePicture = '';
+  String profilePicture =
+      'https://cd.catpawz.eu/03-CATPAWZ/03.06%20-%20CATKEYS%20BUILDS/default-profile.png';
+  String profileBanner =
+      'https://cd.catpawz.eu/03-CATPAWZ/03.06%20-%20CATKEYS%20BUILDS/default-banner.png';
+  String userName = '-';
+  String userHandle = '-';
+  String userFollowers = '-';
+  String userFollowing = '-';
+  String userNotes = '-';
+  String userDescription = '-';
+  String userStatus = '-';
   final TextEditingController _noteController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
 
   fetchData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -59,13 +65,34 @@ class _HomePageState extends State<HomePage> {
       token = prefs.getString('catkeys_token') ?? '';
     });
     if (url.isNotEmpty && token.isNotEmpty) {
-        final host = url;
-        final client = Client(host);
-        
+      client = Misskey(
+        host: url,
+        token: token,
+      );
+      lookupAccount();
     }
   }
 
-  lookupAccount() async {}
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  lookupAccount() async {
+    final res = await client.i.i();
+    setState(() {
+      profilePicture = res.avatarUrl.toString();
+      profileBanner = res.bannerUrl.toString();
+      userName = res.name.toString();
+      userHandle = res.username.toString();
+      userFollowers = res.followersCount.toString();
+      userFollowing = res.followingCount.toString();
+      userNotes = res.notesCount.toString();
+      userDescription = res.description.toString();
+      userStatus = res.onlineStatus.toString();
+    });
+  }
 
   @override
   void dispose() {
@@ -84,7 +111,14 @@ class _HomePageState extends State<HomePage> {
     await Haptics.vibrate(HapticsType.success);
   }
 
-  createNote() async {}
+  createNote() async {
+
+  }
+
+Future<List<Note>> fetchNotes() async {
+  await fetchData(); // Ensure fetchData is called to initialize the client
+  return await client.notes.homeTimeline(NotesTimelineRequest(withFiles: true, withRenotes: true)).then((iterable) => iterable.toList());
+}
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -190,18 +224,265 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        body: const SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Center(
-            child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.start, // Align text to the start (left)
-              crossAxisAlignment:
-                  CrossAxisAlignment.start, // Align text to the start (left)
-              children: [
-                SizedBox(height: 25),
-              ],
-            ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.start, // Align text to the start (left)
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Align text to the start (left)
+            children: [
+              Visibility(
+                visible: currentPageIndex == 0,
+                maintainState: true,
+                child: Expanded(
+                  child: Expanded(
+                    
+                  child: FutureBuilder<List<Note>>(
+                    future: fetchNotes(),
+                    builder: (BuildContext context, AsyncSnapshot<List<Note>> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text('No notes available.'));
+                      } else {
+                        List<Note> notes = snapshot.data!;
+                        return ListView.builder(
+                          itemCount: notes.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            Note note = notes[index];
+                            return ListTile(
+                              title: Text(note.text ?? ''),
+                              subtitle: Text(note.user.username),
+                            );
+                          },
+                        );
+                      }
+                    },
+                  )
+
+
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: currentPageIndex == 1,
+                maintainState: true,
+                child: const Expanded(
+                  child: Text("meow TWO :3"),
+                ),
+              ),
+              Visibility(
+                visible: currentPageIndex == 2,
+                maintainState: true,
+                child: const Expanded(
+                  child: Text("meow THREE :3"),
+                ),
+              ),
+              Visibility(
+                visible: currentPageIndex == 3,
+                maintainState: true,
+                child: Column(
+                  mainAxisSize: MainAxisSize
+                      .min, // Ensure the Column doesn't expand infinitely
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 200, // Set a fixed height for the banner
+                      child: Stack(
+                        fit: StackFit
+                            .expand, // Ensure the stack and its children fill the available space
+                        children: [
+                          // Banner image
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: CachedNetworkImageProvider(profileBanner),
+                                fit: BoxFit.cover,
+                                alignment: Alignment.topCenter,
+                              ),
+                            ),
+                          ),
+                          // Gradient overlay
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainer
+                                      .withOpacity(0.9),
+                                  Colors.transparent
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                            ),
+                          ),
+                          // Content
+                          Column(
+                            children: [
+                              const SizedBox(height: 30),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const SizedBox(width: 30),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainer,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      backgroundImage: CachedNetworkImageProvider(profilePicture),
+                                      radius: 65,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 30),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userName,
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '@$userHandle - $url',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Status: ${userStatus == "OnlineStatus.online" 
+                                  ? "Online" 
+                                  : userStatus == "OnlineStatus.offline" 
+                                      ? "Offline" 
+                                      : userStatus == "OnlineStatus.active" 
+                                          ? "Active" 
+                                          : userStatus == "OnlineStatus.unknown" 
+                                              ? "Unknown" 
+                                              : userStatus}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Divider(),
+                            const SizedBox(width: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Column(
+                                  children: [
+                                    Icon(Icons.edit_note_rounded,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(height: 8),
+                                    Text('Notes',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary)),
+                                    const SizedBox(height: 4),
+                                    Text(userNotes,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary)), // Replace '200' with the actual value
+                                  ],
+                                ),
+                                const SizedBox(width: 28),
+                                Column(
+                                  children: [
+                                    Icon(Icons.person_add_rounded,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(height: 8),
+                                    Text('Following',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary)),
+                                    const SizedBox(height: 4),
+                                    Text(userFollowing,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary)), // Replace '200' with the actual value
+                                  ],
+                                ),
+                                const SizedBox(width: 28),
+                                Column(
+                                  children: [
+                                    Icon(Icons.people_rounded,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(height: 8),
+                                    Text('Followers',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary)),
+                                    const SizedBox(height: 4),
+                                    Text(userFollowers,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary)), // Replace '100' with the actual value
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 5),
+                            const Divider(),
+                            const SizedBox(width: 10),
+                            Text(
+                              userDescription,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Add more profile content here
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
         floatingActionButton: currentPageIndex == 0
@@ -281,14 +562,14 @@ class _HomePageState extends State<HomePage> {
               ),
               NavigationDestination(
                 selectedIcon: CircleAvatar(
-                  backgroundImage: NetworkImage(profilePicture),
+                  backgroundImage: CachedNetworkImageProvider(profilePicture),
                   radius: 16, // Adjust the radius to make the image smaller
                 ),
                 icon: CircleAvatar(
-                  backgroundImage: NetworkImage(profilePicture),
+                  backgroundImage: CachedNetworkImageProvider(profilePicture),
                   radius: 16, // Adjust the radius to make the image smaller
                 ),
-                label: 'Profile',
+                label: userName,
               ),
             ],
           ),
