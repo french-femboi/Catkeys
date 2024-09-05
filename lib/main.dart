@@ -2,6 +2,8 @@ import 'package:catkeys/pre/setup.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'main/home.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -55,17 +57,24 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  navHome() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage(title: 'Catkeys')),
+    );
+  }
+
   checkData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool catkeysInstanceExists = prefs.containsKey('catkeys_url');
     if (catkeysInstanceExists) {
-      // Key exists in SharedPreferences
-      // Do something
+      navHome();
     } else {
       navSetup();
     }
   }
 
+  
 
   @override
   Widget build(BuildContext context) {
