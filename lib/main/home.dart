@@ -131,6 +131,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  repostNote(id) {
+    try {
+      client.notes.renotes(
+        NotesRenoteRequest(
+          noteId: id,
+        ),
+      );
+      Fluttertoast.showToast(
+        msg: 'Note renoted successfully!',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        textColor: Theme.of(context).colorScheme.primaryContainer,
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: 'There was an error while renoting!',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        backgroundColor: Theme.of(context).colorScheme.onErrorContainer,
+        textColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
   Future<List<Note>> fetchNotes() async {
     try {
       final response = await client.notes.homeTimeline(
@@ -145,8 +170,6 @@ class _HomePageState extends State<HomePage> {
       return []; // Return an empty list on error
     }
   }
-
-
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -234,12 +257,12 @@ class _HomePageState extends State<HomePage> {
                     currentPageIndex = 0;
                   });
                 } else if (value == 'Source Code') {
-                    const url = 'https://github.com/french-femboi/Catkeys';
-                    if (await canLaunch(url)) {
-                      await launch(url);
-                    } else {
-                      throw 'Could not launch $url';
-                    }
+                  const url = 'https://github.com/french-femboi/Catkeys';
+                  if (await canLaunch(url)) {
+                    await launch(url);
+                  } else {
+                    throw 'Could not launch $url';
+                  }
                 } else if (value == 'Log Out') {
                   vibrate();
                   showDialog(
@@ -324,6 +347,25 @@ class _HomePageState extends State<HomePage> {
                                       backgroundImage: NetworkImage(
                                           (note.user.avatarUrl).toString()),
                                     ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(Icons.repeat_rounded),
+                                        onPressed: () {
+                                          vibrateSel();
+                                          print('Repost ID: ${note.id}');
+                                          repostNote(note.id);
+                                        },
+                                      ),
+                                      Text(
+                                        '${note.renoteCount}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Divider(), // Add a divider at the bottom
                                 ],
@@ -603,66 +645,66 @@ class _HomePageState extends State<HomePage> {
             ? FloatingActionButton(
                 onPressed: () {
                   vibrateSel();
-                    showDialog(
+                  showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                      title: const Text('Create a note'),
-                      content: SingleChildScrollView(
-                        child: Column(
-                        children: [
-                          TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Note',
-                            border: OutlineInputBorder(),
+                        title: const Text('Create a note'),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              TextField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Note',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: null,
+                                controller: _noteController,
+                                scrollPhysics:
+                                    const NeverScrollableScrollPhysics(),
+                              ),
+                            ],
                           ),
-                          maxLines: null,
-                          controller: _noteController,
-                          scrollPhysics:
-                            const NeverScrollableScrollPhysics(),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              vibrateSel();
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              vibrateSel();
+                              createNote();
+                              Navigator.of(context).pop();
+
+                              Fluttertoast.showToast(
+                                msg: 'Note posted successfully!',
+                                toastLength: Toast.LENGTH_LONG,
+                                gravity: ToastGravity.TOP,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                                textColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                              );
+
+                              Future.delayed(const Duration(seconds: 2), () {
+                                setState(() {
+                                  currentPageIndex = 1;
+                                  currentPageIndex = 0;
+                                });
+                              });
+                            },
+                            child: const Text('Post'),
                           ),
                         ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                        onPressed: () {
-                          vibrateSel();
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                        onPressed: () {
-                          vibrateSel();
-                          createNote();
-                          Navigator.of(context).pop();
-
-                          Fluttertoast.showToast(
-                          msg: 'Note posted successfully!',
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .onPrimaryContainer,
-                          textColor: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer,
-                          );
-
-                          Future.delayed(const Duration(seconds: 2), () {
-                          setState(() {
-                            currentPageIndex = 1;
-                            currentPageIndex = 0;
-                          });
-                          });
-                        },
-                        child: const Text('Post'),
-                        ),
-                      ],
                       );
                     },
-                    );
+                  );
                 },
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                 child: const Icon(
@@ -692,7 +734,7 @@ class _HomePageState extends State<HomePage> {
                 selectedIcon: Icon(Icons.notifications_rounded),
                 icon: Icon(Icons.notifications_outlined),
                 label: 'Notifications',
-                ),
+              ),
               const NavigationDestination(
                 icon: Icon(Icons.search_rounded),
                 label: 'Search',
