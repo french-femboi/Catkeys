@@ -61,6 +61,7 @@ class _HomePageState extends State<HomePage> {
   String userNotes = '-';
   String userDescription = '-';
   String userStatus = '-';
+  bool userNotificationStatus = false;
   final TextEditingController _noteController = TextEditingController();
 
   fetchData() async {
@@ -96,6 +97,7 @@ class _HomePageState extends State<HomePage> {
       userNotes = res.notesCount.toString();
       userDescription = res.description.toString();
       userStatus = res.onlineStatus.toString();
+      userNotificationStatus = res.hasUnreadNotification;
     });
   }
 
@@ -143,6 +145,8 @@ class _HomePageState extends State<HomePage> {
       return []; // Return an empty list on error
     }
   }
+
+
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -335,8 +339,57 @@ class _HomePageState extends State<HomePage> {
               Visibility(
                 visible: currentPageIndex == 1,
                 maintainState: true,
-                child: const Expanded(
-                  child: Text("meow TWO :3"),
+                child: Column(
+                  mainAxisSize: MainAxisSize
+                      .min, // This ensures the Column only takes the space it needs
+                  children: [
+                    Flexible(
+                      // Use Flexible instead of Expanded
+                      fit: FlexFit
+                          .loose, // Allows children to shrink-wrap rather than expanding infinitely
+                      child: FutureBuilder<List<Note>>(
+                        future: fetchNotes(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(
+                                child: Text('Error: ${snapshot.error}'));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return const Center(
+                                child: Text('No data available'));
+                          }
+                          return ListView.builder(
+                            shrinkWrap:
+                                true, // Add this to allow ListView to size itself properly
+                            physics:
+                                const NeverScrollableScrollPhysics(), // Prevent ListView from being scrollable if nested
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              final note = snapshot.data![index];
+                              return Column(
+                                children: [
+                                  ListTile(
+                                    title:
+                                        Text(note.user.name ?? 'Unknown user'),
+                                    subtitle: Text(note.text ?? 'No text'),
+                                    leading: CircleAvatar(
+                                      backgroundImage: NetworkImage(
+                                          (note.user.avatarUrl).toString()),
+                                    ),
+                                  ),
+                                  Divider(), // Add a divider at the bottom
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Visibility(
@@ -550,66 +603,66 @@ class _HomePageState extends State<HomePage> {
             ? FloatingActionButton(
                 onPressed: () {
                   vibrateSel();
-                  showDialog(
+                    showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: const Text('Create a note'),
-                        content: Column(
-                          children: [
-                            SingleChildScrollView(
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Note',
-                                  border: OutlineInputBorder(),
-                                ),
-                                maxLines: null,
-                                controller: _noteController,
-                                scrollPhysics:
-                                    const NeverScrollableScrollPhysics(),
-                              ),
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              vibrateSel();
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Cancel'),
+                      title: const Text('Create a note'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                        children: [
+                          TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Note',
+                            border: OutlineInputBorder(),
                           ),
-                          TextButton(
-                            onPressed: () {
-                              vibrateSel();
-                              createNote();
-                              Navigator.of(context).pop();
-
-                              Fluttertoast.showToast(
-                                msg: 'Note posted successfully!',
-                                toastLength: Toast.LENGTH_LONG,
-                                gravity: ToastGravity.TOP,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
-                                textColor: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
-                              );
-
-                              Future.delayed(const Duration(seconds: 2), () {
-                                setState(() {
-                                  currentPageIndex = 1;
-                                  currentPageIndex = 0;
-                                });
-                              });
-                            },
-                            child: const Text('Post'),
+                          maxLines: null,
+                          controller: _noteController,
+                          scrollPhysics:
+                            const NeverScrollableScrollPhysics(),
                           ),
                         ],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                        onPressed: () {
+                          vibrateSel();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                        onPressed: () {
+                          vibrateSel();
+                          createNote();
+                          Navigator.of(context).pop();
+
+                          Fluttertoast.showToast(
+                          msg: 'Note posted successfully!',
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.TOP,
+                          backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer,
+                          textColor: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer,
+                          );
+
+                          Future.delayed(const Duration(seconds: 2), () {
+                          setState(() {
+                            currentPageIndex = 1;
+                            currentPageIndex = 0;
+                          });
+                          });
+                        },
+                        child: const Text('Post'),
+                        ),
+                      ],
                       );
                     },
-                  );
+                    );
                 },
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                 child: const Icon(
@@ -625,6 +678,9 @@ class _HomePageState extends State<HomePage> {
               vibrateSel();
               setState(() {
                 currentPageIndex = index;
+                if (currentPageIndex == 3) {
+                  lookupAccount();
+                }
               });
             },
             destinations: <Widget>[
@@ -636,7 +692,7 @@ class _HomePageState extends State<HomePage> {
                 selectedIcon: Icon(Icons.notifications_rounded),
                 icon: Icon(Icons.notifications_outlined),
                 label: 'Notifications',
-              ),
+                ),
               const NavigationDestination(
                 icon: Icon(Icons.search_rounded),
                 label: 'Search',
