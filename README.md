@@ -1,6 +1,5 @@
 # Catkeys
-
-I developed this client because I couldn't find any Misskey client app that met my preferences. It was a challenging but fulfilling experience to create a client that aligns with my expectations. I aimed for a user-friendly interface and essential features for a seamless Misskey experience. After countless hours of coding and testing, I'm proud of the client app I've created. I hope it proves useful and enjoyable for other Misskey users. If you have any feedback or suggestions, please let me know. Together, we can improve this client. Thank you for your support!
+I developed this client because I couldn't find any Misskey client app that met my preferences. It's still in very early development and therefore I would recommend not to use it before a real version comes out :<
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N2FINT7) [![Translation status](http://translate.catpawz.eu/widget/catpawz/catkeys/svg-badge.svg)](http://translate.catpawz.eu/engage/catpawz/)
 
