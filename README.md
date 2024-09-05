@@ -31,4 +31,4 @@ details
 
 ## Repo activity
 
-![Alt](https://repobeats.axiom.co/api/embed/99087bf5b9b388ddf57682bfa1d2811868506b65.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/94dcd440ea0a5efd0ab203ef6d6376a1bdae67f9.svg "Repobeats analytics image")
