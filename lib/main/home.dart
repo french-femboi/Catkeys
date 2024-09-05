@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,14 +113,22 @@ class _HomePageState extends State<HomePage> {
     await Haptics.vibrate(HapticsType.success);
   }
 
-  createNote() async {
+  createNote() async {}
 
+  Future<List<Note>> fetchNotes() async {
+    try {
+      final response = await client.notes.homeTimeline(
+        NotesTimelineRequest(
+          limit: 100,
+        ),
+      );
+      print('Notes fetched: ${response.length}');
+      print('Full response: $response');
+      return response.toList(); 
+    } catch (e) {
+      return []; // Return an empty list on error
+    }
   }
-
-Future<List<Note>> fetchNotes() async {
-  await fetchData(); // Ensure fetchData is called to initialize the client
-  return await client.notes.homeTimeline(NotesTimelineRequest(withFiles: true, withRenotes: true)).then((iterable) => iterable.toList());
-}
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -234,36 +244,56 @@ Future<List<Note>> fetchNotes() async {
               Visibility(
                 visible: currentPageIndex == 0,
                 maintainState: true,
-                child: Expanded(
-                  child: Expanded(
-                    
-                  child: FutureBuilder<List<Note>>(
-                    future: fetchNotes(),
-                    builder: (BuildContext context, AsyncSnapshot<List<Note>> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(child: Text('No notes available.'));
-                      } else {
-                        List<Note> notes = snapshot.data!;
-                        return ListView.builder(
-                          itemCount: notes.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            Note note = notes[index];
-                            return ListTile(
-                              title: Text(note.text ?? ''),
-                              subtitle: Text(note.user.username),
-                            );
-                          },
-                        );
-                      }
-                    },
-                  )
-
-
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize
+                      .min, // This ensures the Column only takes the space it needs
+                  children: [
+                    Flexible(
+                      // Use Flexible instead of Expanded
+                      fit: FlexFit
+                          .loose, // Allows children to shrink-wrap rather than expanding infinitely
+                      child: FutureBuilder<List<Note>>(
+                        future: fetchNotes(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(
+                                child: Text('Error: ${snapshot.error}'));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return const Center(
+                                child: Text('No data available'));
+                          }
+                          return ListView.builder(
+                            shrinkWrap:
+                                true, // Add this to allow ListView to size itself properly
+                            physics:
+                                const NeverScrollableScrollPhysics(), // Prevent ListView from being scrollable if nested
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              final note = snapshot.data![index];
+                              return Column(
+                              children: [
+                                ListTile(
+                                title: Text(note.user.name ?? 'Unknown user'),
+                                subtitle: Text(note.text ?? 'No text'),
+                                leading: CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                    (note.user.avatarUrl).toString()),
+                                ),
+                                ),
+                                Divider(), // Add a divider at the bottom
+                              ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Visibility(
@@ -299,7 +329,8 @@ Future<List<Note>> fetchNotes() async {
                             width: double.infinity,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: CachedNetworkImageProvider(profileBanner),
+                                image:
+                                    CachedNetworkImageProvider(profileBanner),
                                 fit: BoxFit.cover,
                                 alignment: Alignment.topCenter,
                               ),
@@ -341,7 +372,9 @@ Future<List<Note>> fetchNotes() async {
                                       ),
                                     ),
                                     child: CircleAvatar(
-                                      backgroundImage: CachedNetworkImageProvider(profilePicture),
+                                      backgroundImage:
+                                          CachedNetworkImageProvider(
+                                              profilePicture),
                                       radius: 65,
                                     ),
                                   ),
@@ -380,15 +413,7 @@ Future<List<Note>> fetchNotes() async {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Status: ${userStatus == "OnlineStatus.online" 
-                                  ? "Online" 
-                                  : userStatus == "OnlineStatus.offline" 
-                                      ? "Offline" 
-                                      : userStatus == "OnlineStatus.active" 
-                                          ? "Active" 
-                                          : userStatus == "OnlineStatus.unknown" 
-                                              ? "Unknown" 
-                                              : userStatus}',
+                              'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Theme.of(context).colorScheme.secondary,
