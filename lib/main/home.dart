@@ -62,6 +62,7 @@ class _HomePageState extends State<HomePage> {
   String userDescription = '-';
   String userStatus = '-';
   bool userNotificationStatus = false;
+  int _selectedChip = 1;
   final TextEditingController _noteController = TextEditingController();
 
   fetchData() async {
@@ -124,11 +125,14 @@ class _HomePageState extends State<HomePage> {
       await client.notes.create(
         NotesCreateRequest(
           text: content,
+            visibility: _selectedChip == 1 ? NoteVisibility.public : _selectedChip == 2 ? NoteVisibility.home : _selectedChip == 3 ? NoteVisibility.followers : null,
         ),
       );
     } catch (e) {
       print('Error creating note: $e');
     }
+    _noteController.text = '';
+    _selectedChip = 0;
   }
 
   repostNote(id) {
@@ -159,8 +163,10 @@ class _HomePageState extends State<HomePage> {
   Future<List<Note>> fetchNotes() async {
     try {
       final response = await client.notes.homeTimeline(
-        NotesTimelineRequest(
+        const NotesTimelineRequest(
           limit: 100,
+          includeLocalRenotes: false,
+          includeMyRenotes: false,
         ),
       );
       print('Notes fetched: ${response.length}');
@@ -306,76 +312,95 @@ class _HomePageState extends State<HomePage> {
               Visibility(
                 visible: currentPageIndex == 0,
                 maintainState: true,
-                child: Column(
-                  mainAxisSize: MainAxisSize
-                      .min, // This ensures the Column only takes the space it needs
-                  children: [
-                    Flexible(
-                      // Use Flexible instead of Expanded
-                      fit: FlexFit
-                          .loose, // Allows children to shrink-wrap rather than expanding infinitely
-                      child: FutureBuilder<List<Note>>(
-                        future: fetchNotes(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return Center(
-                                child: Text('Error: ${snapshot.error}'));
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return const Center(
-                                child: Text('No data available'));
-                          }
-                          return ListView.builder(
-                            shrinkWrap:
-                                true, // Add this to allow ListView to size itself properly
-                            physics:
-                                const NeverScrollableScrollPhysics(), // Prevent ListView from being scrollable if nested
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              final note = snapshot.data![index];
-                              return Column(
-                                children: [
-                                  ListTile(
-                                    title:
-                                        Text(note.user.name ?? 'Unknown user'),
-                                    subtitle: Text(note.text ?? 'No text'),
-                                    leading: CircleAvatar(
-                                      backgroundImage: NetworkImage(
-                                          (note.user.avatarUrl).toString()),
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.repeat_rounded),
-                                        onPressed: () {
-                                          vibrateSel();
-                                          print('Repost ID: ${note.id}');
-                                          repostNote(note.id);
-                                        },
-                                      ),
-                                      Text(
-                                        '${note.renoteCount}',
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height -
+                            kToolbarHeight - // Subtract the app bar height
+                            kBottomNavigationBarHeight -
+                            63, // Subtract the bottom nav bar height
+                        child: FutureBuilder<List<Note>>(
+                          future: fetchNotes(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            } else if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) {
+                              return const Center(
+                                  child: Text('No data available'));
+                            }
+                            return ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                final note = snapshot.data![index];
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      title: Text(
+                                        note.user.name ?? 'Unknown user',
                                         style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  Divider(), // Add a divider at the bottom
-                                ],
-                              );
-                            },
-                          );
-                        },
+                                      subtitle: Text(
+                                        note.text ?? 'No text',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .secondary, // Change the color to red
+                                        ),
+                                      ),
+                                      leading: CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                            note.user.avatarUrl.toString()),
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.repeat_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary, // Change the color to red
+                                          ),
+                                          onPressed: () {
+                                            vibrateSel();
+                                            print('Repost ID: ${note.id}');
+                                            repostNote(note.id);
+                                          },
+                                        ),
+                                        Text(
+                                          '${note.renoteCount}',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary),
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               Visibility(
@@ -423,7 +448,7 @@ class _HomePageState extends State<HomePage> {
                                           (note.user.avatarUrl).toString()),
                                     ),
                                   ),
-                                  Divider(), // Add a divider at the bottom
+                                  const Divider(), // Add a divider at the bottom
                                 ],
                               );
                             },
@@ -645,66 +670,177 @@ class _HomePageState extends State<HomePage> {
             ? FloatingActionButton(
                 onPressed: () {
                   vibrateSel();
-                  showDialog(
+                    showModalBottomSheet(
                     context: context,
+                    isScrollControlled: true,
+                    enableDrag: false, // Disable dragging to dismiss
+                    isDismissible: false, // Disable dismissing by clicking outside
                     builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Create a note'),
-                        content: SingleChildScrollView(
+                      return StatefulBuilder(
+                      builder:
+                        (BuildContext context, StateSetter setModalState) {
+                        return SingleChildScrollView(
+                        child: Container(
+                          padding: EdgeInsets.only(
+                          bottom:
+                            MediaQuery.of(context).viewInsets.bottom,
+                          left: 16,
+                          right: 16,
+                          top: 16,
+                          ),
                           child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Create a note',
+                              style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .primary,
+                              ),
+                            ),
+                            ),
+                            Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Your note will be published as @$userHandle',
+                              style: TextStyle(
+                              fontSize: 18,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .secondary,
+                              ),
+                            ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Note',
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLines: null,
+                            controller: _noteController,
+                            scrollPhysics:
+                              const NeverScrollableScrollPhysics(),
+                            ),
+                            const SizedBox(height: 8),
+                            Divider(),
+                            const SizedBox(height: 8),
+                            Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Note visibility',
+                              style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .primary,
+                              ),
+                            ),
+                            ),
+                            Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Select who can see your note',
+                              style: TextStyle(
+                              fontSize: 18,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .secondary,
+                              ),
+                            ),
+                            ),
+                            Row(
                             children: [
-                              TextField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Note',
-                                  border: OutlineInputBorder(),
-                                ),
-                                maxLines: null,
-                                controller: _noteController,
-                                scrollPhysics:
-                                    const NeverScrollableScrollPhysics(),
+                              ChoiceChip(
+                              label: Text('Public'),
+                              selected: _selectedChip == 1,
+                              onSelected: (bool selected) {
+                                vibrateSel();
+                                setModalState(() {
+                                _selectedChip = selected ? 1 : 0;
+                                });
+                              },
+                              ),
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                              label: Text('Local'),
+                              selected: _selectedChip == 2,
+                              onSelected: (bool selected) {
+                                vibrateSel();
+                                setModalState(() {
+                                _selectedChip = selected ? 2 : 0;
+                                });
+                              },
+                              ),
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                              label: Text('Followers'),
+                              selected: _selectedChip == 3,
+                              onSelected: (bool selected) {
+                                vibrateSel();
+                                setModalState(() {
+                                _selectedChip = selected ? 3 : 0;
+                                });
+                              },
                               ),
                             ],
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              vibrateSel();
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              vibrateSel();
-                              createNote();
-                              Navigator.of(context).pop();
+                            ),
+                            Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                              onPressed: () {
+                                vibrateSel();
+                                Navigator.of(context).pop();
+                                  _noteController.text = '';
+                                  _selectedChip = 1;
+                              },
+                              child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                              onPressed: () {
+                                vibrateSel();
+                                createNote();
+                                Navigator.of(context).pop();
 
-                              Fluttertoast.showToast(
+                                Fluttertoast.showToast(
                                 msg: 'Note posted successfully!',
                                 toastLength: Toast.LENGTH_LONG,
                                 gravity: ToastGravity.TOP,
                                 backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                                  .colorScheme
+                                  .onPrimaryContainer,
                                 textColor: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
-                              );
+                                  .colorScheme
+                                  .primaryContainer,
+                                );
 
-                              Future.delayed(const Duration(seconds: 2), () {
+                                Future.delayed(
+                                  const Duration(seconds: 2), () {
                                 setState(() {
                                   currentPageIndex = 1;
                                   currentPageIndex = 0;
                                 });
-                              });
-                            },
-                            child: const Text('Post'),
+                                });
+                              },
+                              child: const Text('Post'),
+                              ),
+                            ],
+                            ),
+                          ],
                           ),
-                        ],
+                        ),
+                        );
+                      },
                       );
                     },
-                  );
+                    );
                 },
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                 child: const Icon(
