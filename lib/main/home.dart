@@ -221,12 +221,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   refreshNotesD() {
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         currentPageIndex = 1;
         currentPageIndex = 0;
       });
     });
+  }
+
+  openLink(urlInput) async {
+    var url = urlInput;
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      Fluttertoast.showToast(
+        msg: 'There while launching a browser!',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        backgroundColor: Theme.of(context).colorScheme.onErrorContainer,
+        textColor: Theme.of(context).colorScheme.error,
+      );
+    }
   }
 
   @override
@@ -304,7 +319,14 @@ class _HomePageState extends State<HomePage> {
                   if (await canLaunch(url)) {
                     await launch(url);
                   } else {
-                    throw 'Could not launch $url';
+                    Fluttertoast.showToast(
+                      msg: 'There while launching a browser!',
+                      toastLength: Toast.LENGTH_LONG,
+                      gravity: ToastGravity.TOP,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.onErrorContainer,
+                      textColor: Theme.of(context).colorScheme.error,
+                    );
                   }
                 } else if (value == 'Log Out') {
                   vibrate();
@@ -405,8 +427,10 @@ class _HomePageState extends State<HomePage> {
                                       trailing: note.visibility ==
                                               NoteVisibility.followers
                                           ? Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 4),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
                                               decoration: BoxDecoration(
                                                 color: Theme.of(context)
                                                     .colorScheme
@@ -448,6 +472,19 @@ class _HomePageState extends State<HomePage> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .secondary),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.open_in_browser_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary, // Change the color to red
+                                          ),
+                                          onPressed: () async {
+                                            vibrateSel();
+                                            openLink(
+                                                'https://$url/notes/${note.id}');
+                                          },
                                         ),
                                         if (note.user.username == userHandle)
                                           IconButton(
@@ -683,7 +720,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 10),
                             const Divider(),
-                            const SizedBox(width: 5),
+                            const SizedBox(height: 5),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -751,9 +788,9 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(height: 5),
                             const Divider(),
-                            const SizedBox(width: 10),
+                            const SizedBox(height: 10),
                             Text(
                               userDescription,
                               style: TextStyle(
@@ -761,6 +798,39 @@ class _HomePageState extends State<HomePage> {
                                 color: Theme.of(context).colorScheme.secondary,
                               ),
                             ),
+                            const SizedBox(height: 10),
+                            const Divider(),
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: () {
+                                vibrateSel();
+                                openLink('https://$url/@$userHandle');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.secondary,
+                                backgroundColor: Colors
+                                    .transparent, // Set the button's text color
+                                side: BorderSide(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .secondary), // Add a border to the button
+                                minimumSize: const Size(double.infinity,
+                                    40), // Set the button's width to full width and height to 40
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons
+                                      .open_in_browser_rounded), // Add your desired icon
+                                  SizedBox(
+                                      width:
+                                          8), // Add some spacing between the icon and text
+                                  Text(
+                                      'Open profile in browser'), // Add your desired text
+                                ],
+                              ),
+                            )
                           ],
                         ),
                       ),
@@ -835,7 +905,7 @@ class _HomePageState extends State<HomePage> {
                                         const NeverScrollableScrollPhysics(),
                                   ),
                                   const SizedBox(height: 8),
-                                  Divider(),
+                                  const Divider(),
                                   const SizedBox(height: 8),
                                   Align(
                                     alignment: Alignment.centerLeft,
@@ -862,10 +932,22 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                   ),
+                                  if (_selectedChip == 0)
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Please select at least one option',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
+                                        ),
+                                      ),
+                                    ),
                                   Row(
                                     children: [
                                       ChoiceChip(
-                                        label: Text('Public'),
+                                        label: const Text('Public'),
                                         selected: _selectedChip == 1,
                                         onSelected: (bool selected) {
                                           vibrateSel();
@@ -876,7 +958,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(width: 8),
                                       ChoiceChip(
-                                        label: Text('Local'),
+                                        label: const Text('Home'),
                                         selected: _selectedChip == 2,
                                         onSelected: (bool selected) {
                                           vibrateSel();
@@ -887,7 +969,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(width: 8),
                                       ChoiceChip(
-                                        label: Text('Followers'),
+                                        label: const Text('Followers'),
                                         selected: _selectedChip == 3,
                                         onSelected: (bool selected) {
                                           vibrateSel();
