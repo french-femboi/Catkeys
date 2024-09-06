@@ -2,7 +2,7 @@ name: catkeys
 description: "A new Flutter project."
 publish_to: 'none' 
 
-version: 0.0.1+001
+version: 0.0.2+002
 
 environment:
   sdk: ^3.5.1
