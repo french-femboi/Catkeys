@@ -125,7 +125,13 @@ class _HomePageState extends State<HomePage> {
       await client.notes.create(
         NotesCreateRequest(
           text: content,
-            visibility: _selectedChip == 1 ? NoteVisibility.public : _selectedChip == 2 ? NoteVisibility.home : _selectedChip == 3 ? NoteVisibility.followers : null,
+          visibility: _selectedChip == 1
+              ? NoteVisibility.public
+              : _selectedChip == 2
+                  ? NoteVisibility.home
+                  : _selectedChip == 3
+                      ? NoteVisibility.followers
+                      : null,
         ),
       );
     } catch (e) {
@@ -152,6 +158,31 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       Fluttertoast.showToast(
         msg: 'There was an error while renoting!',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        backgroundColor: Theme.of(context).colorScheme.onErrorContainer,
+        textColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  deleteNote(id) {
+    try {
+      client.notes.delete(
+        NotesDeleteRequest(
+          noteId: id,
+        ),
+      );
+      Fluttertoast.showToast(
+        msg: 'Note deleted successfully!',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        textColor: Theme.of(context).colorScheme.primaryContainer,
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: 'There was an error while deleting the note!',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.TOP,
         backgroundColor: Theme.of(context).colorScheme.onErrorContainer,
@@ -189,6 +220,15 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  refreshNotesD() {
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        currentPageIndex = 1;
+        currentPageIndex = 0;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -222,12 +262,12 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const PopupMenuItem(
-                    value: 'Reload Notes',
+                    value: 'Refresh Notes',
                     child: Row(
                       children: [
                         Icon(Icons.refresh_rounded),
                         SizedBox(width: 10),
-                        Text('Reload notes'),
+                        Text('Refresh Notes'),
                       ],
                     ),
                   ),
@@ -256,12 +296,9 @@ class _HomePageState extends State<HomePage> {
               onSelected: (value) async {
                 if (value == 'Settings') {
                   // Do something for option 1
-                } else if (value == 'Reload Notes') {
+                } else if (value == 'Refresh Notes') {
                   vibrateSel();
-                  setState(() {
-                    currentPageIndex = 1;
-                    currentPageIndex = 0;
-                  });
+                  refreshNotesD();
                 } else if (value == 'Source Code') {
                   const url = 'https://github.com/french-femboi/Catkeys';
                   if (await canLaunch(url)) {
@@ -365,6 +402,29 @@ class _HomePageState extends State<HomePage> {
                                         backgroundImage: NetworkImage(
                                             note.user.avatarUrl.toString()),
                                       ),
+                                      trailing: note.visibility ==
+                                              NoteVisibility.followers
+                                          ? Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primaryContainer,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                'Followers only',
+                                                style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimaryContainer,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
                                     ),
                                     Row(
                                       children: [
@@ -389,6 +449,52 @@ class _HomePageState extends State<HomePage> {
                                                   .colorScheme
                                                   .secondary),
                                         ),
+                                        if (note.user.username == userHandle)
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.delete_rounded,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary, // Change the color to red
+                                            ),
+                                            onPressed: () {
+                                              vibrateSel();
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title: const Text(
+                                                        'Deleting Note'),
+                                                    content: const Text(
+                                                        "Are you sure you want to delete this note? This action can't be undone."),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          vibrateSel();
+                                                        },
+                                                        child: const Text(
+                                                            'Cancel'),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          deleteNote(note.id);
+                                                          vibrateSel();
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          refreshNotesD();
+                                                        },
+                                                        child: const Text(
+                                                            'Confirm'),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
                                       ],
                                     ),
                                     const Divider(),
@@ -670,177 +776,172 @@ class _HomePageState extends State<HomePage> {
             ? FloatingActionButton(
                 onPressed: () {
                   vibrateSel();
-                    showModalBottomSheet(
+                  showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
                     enableDrag: false, // Disable dragging to dismiss
-                    isDismissible: false, // Disable dismissing by clicking outside
+                    isDismissible:
+                        false, // Disable dismissing by clicking outside
                     builder: (BuildContext context) {
                       return StatefulBuilder(
-                      builder:
-                        (BuildContext context, StateSetter setModalState) {
-                        return SingleChildScrollView(
-                        child: Container(
-                          padding: EdgeInsets.only(
-                          bottom:
-                            MediaQuery.of(context).viewInsets.bottom,
-                          left: 16,
-                          right: 16,
-                          top: 16,
-                          ),
-                          child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Create a note',
-                              style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .primary,
+                        builder:
+                            (BuildContext context, StateSetter setModalState) {
+                          return SingleChildScrollView(
+                            child: Container(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom,
+                                left: 16,
+                                right: 16,
+                                top: 16,
                               ),
-                            ),
-                            ),
-                            Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Your note will be published as @$userHandle',
-                              style: TextStyle(
-                              fontSize: 18,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .secondary,
-                              ),
-                            ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                            decoration: const InputDecoration(
-                              labelText: 'Note',
-                              border: OutlineInputBorder(),
-                            ),
-                            maxLines: null,
-                            controller: _noteController,
-                            scrollPhysics:
-                              const NeverScrollableScrollPhysics(),
-                            ),
-                            const SizedBox(height: 8),
-                            Divider(),
-                            const SizedBox(height: 8),
-                            Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Note visibility',
-                              style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .primary,
-                              ),
-                            ),
-                            ),
-                            Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Select who can see your note',
-                              style: TextStyle(
-                              fontSize: 18,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .secondary,
-                              ),
-                            ),
-                            ),
-                            Row(
-                            children: [
-                              ChoiceChip(
-                              label: Text('Public'),
-                              selected: _selectedChip == 1,
-                              onSelected: (bool selected) {
-                                vibrateSel();
-                                setModalState(() {
-                                _selectedChip = selected ? 1 : 0;
-                                });
-                              },
-                              ),
-                              const SizedBox(width: 8),
-                              ChoiceChip(
-                              label: Text('Local'),
-                              selected: _selectedChip == 2,
-                              onSelected: (bool selected) {
-                                vibrateSel();
-                                setModalState(() {
-                                _selectedChip = selected ? 2 : 0;
-                                });
-                              },
-                              ),
-                              const SizedBox(width: 8),
-                              ChoiceChip(
-                              label: Text('Followers'),
-                              selected: _selectedChip == 3,
-                              onSelected: (bool selected) {
-                                vibrateSel();
-                                setModalState(() {
-                                _selectedChip = selected ? 3 : 0;
-                                });
-                              },
-                              ),
-                            ],
-                            ),
-                            Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                              onPressed: () {
-                                vibrateSel();
-                                Navigator.of(context).pop();
-                                  _noteController.text = '';
-                                  _selectedChip = 1;
-                              },
-                              child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                              onPressed: () {
-                                vibrateSel();
-                                createNote();
-                                Navigator.of(context).pop();
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Create a note',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Your note will be published as @$userHandle',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'Note',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    maxLines: null,
+                                    controller: _noteController,
+                                    scrollPhysics:
+                                        const NeverScrollableScrollPhysics(),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Divider(),
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Note visibility',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Select who can see your note',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      ChoiceChip(
+                                        label: Text('Public'),
+                                        selected: _selectedChip == 1,
+                                        onSelected: (bool selected) {
+                                          vibrateSel();
+                                          setModalState(() {
+                                            _selectedChip = selected ? 1 : 0;
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: Text('Local'),
+                                        selected: _selectedChip == 2,
+                                        onSelected: (bool selected) {
+                                          vibrateSel();
+                                          setModalState(() {
+                                            _selectedChip = selected ? 2 : 0;
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: Text('Followers'),
+                                        selected: _selectedChip == 3,
+                                        onSelected: (bool selected) {
+                                          vibrateSel();
+                                          setModalState(() {
+                                            _selectedChip = selected ? 3 : 0;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          vibrateSel();
+                                          Navigator.of(context).pop();
+                                          _noteController.text = '';
+                                          _selectedChip = 1;
+                                        },
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          vibrateSel();
+                                          createNote();
+                                          Navigator.of(context).pop();
 
-                                Fluttertoast.showToast(
-                                msg: 'Note posted successfully!',
-                                toastLength: Toast.LENGTH_LONG,
-                                gravity: ToastGravity.TOP,
-                                backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                                textColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                                );
+                                          Fluttertoast.showToast(
+                                            msg: 'Note posted successfully!',
+                                            toastLength: Toast.LENGTH_LONG,
+                                            gravity: ToastGravity.TOP,
+                                            backgroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                            textColor: Theme.of(context)
+                                                .colorScheme
+                                                .primaryContainer,
+                                          );
 
-                                Future.delayed(
-                                  const Duration(seconds: 2), () {
-                                setState(() {
-                                  currentPageIndex = 1;
-                                  currentPageIndex = 0;
-                                });
-                                });
-                              },
-                              child: const Text('Post'),
+                                          refreshNotesD();
+                                        },
+                                        child: const Text('Post'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
                             ),
-                          ],
-                          ),
-                        ),
-                        );
-                      },
+                          );
+                        },
                       );
                     },
-                    );
+                  );
                 },
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                 child: const Icon(
@@ -863,8 +964,8 @@ class _HomePageState extends State<HomePage> {
             },
             destinations: <Widget>[
               const NavigationDestination(
-                icon: Icon(Icons.explore),
-                label: 'Explore',
+                icon: Icon(Icons.home_rounded),
+                label: 'Home',
               ),
               const NavigationDestination(
                 selectedIcon: Icon(Icons.notifications_rounded),
