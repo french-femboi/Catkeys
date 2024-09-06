@@ -1,8 +1,8 @@
 name: catkeys
-description: "A new Flutter project."
+description: "French Femboi's custom Misskey client."
 publish_to: 'none' 
 
-version: 0.0.2+002
+version: 0.0.3+003
 
 environment:
   sdk: ^3.5.1

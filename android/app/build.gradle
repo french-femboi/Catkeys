@@ -31,11 +31,22 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'french_femboi_signing_key'
+            keyPassword 'tgiPiey1SuYjPp'
+            storeFile file('french_femboi_key.jks')
+            storePassword 'tgiPiey1SuYjPp'
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            // Use your release signing config
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
