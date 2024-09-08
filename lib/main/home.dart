@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:catkeys/main/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -143,20 +144,22 @@ class _HomePageState extends State<HomePage> {
     _selectedChip = 0;
   }
 
-  repostNote(id) {
+  repostNote(id) async {
     try {
-      client.notes.renotes(
-        NotesRenoteRequest(
-          noteId: id,
+      await client.notes.create(
+        NotesCreateRequest(
+          renoteId:
+              id, // Set the renoteId to the ID of the note you want to renote
         ),
       );
       Fluttertoast.showToast(
         msg: 'Note renoted successfully!',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.TOP,
-        backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-        textColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        textColor: Theme.of(context).colorScheme.onPrimaryContainer,
       );
+      refreshNotesD();
     } catch (e) {
       Fluttertoast.showToast(
         msg: 'There was an error while renoting!',
@@ -179,8 +182,8 @@ class _HomePageState extends State<HomePage> {
         msg: 'Note deleted successfully!',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.TOP,
-        backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-        textColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        textColor: Theme.of(context).colorScheme.onPrimaryContainer,
       );
     } catch (e) {
       Fluttertoast.showToast(
@@ -198,8 +201,6 @@ class _HomePageState extends State<HomePage> {
       final response = await client.notes.homeTimeline(
         NotesTimelineRequest(
           limit: posts,
-          includeLocalRenotes: false,
-          includeMyRenotes: false,
         ),
       );
       return response.toList();
@@ -247,7 +248,8 @@ class _HomePageState extends State<HomePage> {
   navSettings() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SettingsPage(title: 'Settings')),
+      MaterialPageRoute(
+          builder: (context) => const SettingsPage(title: 'Settings')),
     );
   }
 
@@ -420,25 +422,31 @@ class _HomePageState extends State<HomePage> {
                                               .primary,
                                         ),
                                       ),
-                                      
-                                      subtitle: 
-                                      Text(
-                                        note.text ?? note.renote?.text ?? 'No content available',
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondary, // Change the color to red
+                                      subtitle: MarkdownBody(
+                                        data: note.text ??
+                                            note.renote?.text ??
+                                            'No content available',
+                                        styleSheet: MarkdownStyleSheet(
+                                          p: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary, // You can style text here
+                                          ),
                                         ),
+                                        onTapLink: (text, url, title) {
+                                          if (url != null) {
+                                            openLink(
+                                                url); // Open the link using the url_launcher package
+                                          }
+                                        },
                                       ),
                                       leading: CircleAvatar(
                                         backgroundImage: NetworkImage(
                                             note.user.avatarUrl.toString()),
                                       ),
-                                        
                                     ),
                                     Row(
                                       children: [
-                                        if (note.renoteId == null)
                                         IconButton(
                                           icon: Icon(
                                             Icons.repeat_rounded,
@@ -450,15 +458,6 @@ class _HomePageState extends State<HomePage> {
                                             vibrateSel();
                                             repostNote(note.id);
                                           },
-                                        ),
-                                        if (note.renoteId == null)
-                                        Text(
-                                          '${note.renoteCount}',
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .secondary),
                                         ),
                                         IconButton(
                                           icon: Icon(
@@ -520,60 +519,79 @@ class _HomePageState extends State<HomePage> {
                                             },
                                           ),
                                         if (note.renoteId != null) ...[
-                                            Container(
-                                              padding: EdgeInsets.only(right: 3.0), // Add padding only on the right side
-                                              decoration: BoxDecoration(
+                                          Container(
+                                            padding: EdgeInsets.only(
+                                                right:
+                                                    3.0), // Add padding only on the right side
+                                            decoration: BoxDecoration(
                                               border: Border.all(
-                                                color: Theme.of(context).colorScheme.primary,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
                                                 width: 1.0,
                                               ),
-                                              borderRadius: BorderRadius.circular(4.0),
-                                              ),
-                                              child: Row(
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0),
+                                            ),
+                                            child: Row(
                                               children: [
                                                 Icon(
-                                                Icons.restart_alt_rounded,
-                                                color: Theme.of(context).colorScheme.primary,
+                                                  Icons.restart_alt_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                 ),
                                                 Text(
-                                                'Renote',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Theme.of(context).colorScheme.primary,
-                                                  fontWeight: FontWeight.bold
-                                                ),
+                                                  'Renote',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
                                                 ),
                                               ],
-                                              ),
                                             ),
+                                          ),
                                         ],
-                                        if (note.visibility == NoteVisibility.followers) ...[
-                                            Container(
-                                              padding: EdgeInsets.only(right: 3.0), // Add padding only on the right side
-                                              decoration: BoxDecoration(
+                                        if (note.visibility ==
+                                            NoteVisibility.followers) ...[
+                                          Container(
+                                            padding: EdgeInsets.only(
+                                                right:
+                                                    3.0), // Add padding only on the right side
+                                            decoration: BoxDecoration(
                                               border: Border.all(
-                                                color: Theme.of(context).colorScheme.primary,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
                                                 width: 1.0,
                                               ),
-                                              borderRadius: BorderRadius.circular(4.0),
-                                              ),
-                                              child: Row(
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0),
+                                            ),
+                                            child: Row(
                                               children: [
                                                 Icon(
-                                                Icons.lock_rounded,
-                                                color: Theme.of(context).colorScheme.primary,
+                                                  Icons.lock_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                 ),
                                                 Text(
-                                                'Followers only',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Theme.of(context).colorScheme.primary,
-                                                  fontWeight: FontWeight.bold
-                                                ),
+                                                  'Followers only',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
                                                 ),
                                               ],
-                                              ),
                                             ),
+                                          ),
                                         ],
                                       ],
                                     ),
