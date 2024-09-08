@@ -13,6 +13,7 @@ import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../pre/setup.dart';
+import 'profile.dart';
 
 void main() {
   runApp(const Home());
@@ -52,9 +53,9 @@ class _HomePageState extends State<HomePage> {
   String token = '';
   int currentPageIndex = 0;
   String profilePicture =
-      'https://cd.catpawz.eu/03-CATPAWZ/03.06%20-%20CATKEYS%20BUILDS/default-profile.png';
+      '';
   String profileBanner =
-      'https://cd.catpawz.eu/03-CATPAWZ/03.06%20-%20CATKEYS%20BUILDS/default-banner.png';
+      '';
   String userName = '-';
   String userHandle = '-';
   String userFollowers = '-';
@@ -253,6 +254,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  navProfile(uID) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('catkeys_view_user', uID);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => const ProfilePage(title: 'User profile')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -435,15 +446,22 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         onTapLink: (text, url, title) {
                                           if (url != null) {
+                                            vibrateSel();
                                             openLink(
                                                 url); // Open the link using the url_launcher package
                                           }
                                         },
                                       ),
-                                      leading: CircleAvatar(
-                                        backgroundImage: NetworkImage(
+                                        leading: GestureDetector(
+                                        onTap: () {
+                                          vibrateSel();
+                                          navProfile(note.userId);
+                                        },
+                                        child: CircleAvatar(
+                                          backgroundImage: NetworkImage(
                                             note.user.avatarUrl.toString()),
-                                      ),
+                                        ),
+                                        ),
                                     ),
                                     Row(
                                       children: [
@@ -852,12 +870,22 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(height: 5),
                             const Divider(),
                             const SizedBox(height: 10),
-                            Text(
-                              userDescription,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Theme.of(context).colorScheme.secondary,
+                            MarkdownBody(
+                              data: userDescription ??
+                                  'No description available', // Markdown text
+                              styleSheet: MarkdownStyleSheet(
+                                p: TextStyle(
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .secondary, // Text style
+                                ),
                               ),
+                              onTapLink: (text, url, title) {
+                                if (url != null) {
+                                  openLink(url); // Open the link when tapped
+                                }
+                              },
                             ),
                             const SizedBox(height: 10),
                             const Divider(),
