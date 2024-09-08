@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Use device's color scheme
       darkTheme: ThemeData.dark(), // Enable dark mode
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
         fontFamily: 'Inter', // Set the font family to Inter
       ),

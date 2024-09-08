@@ -20,7 +20,6 @@ class Setup extends StatelessWidget {
       themeMode: ThemeMode.system, // Use device's color scheme
       darkTheme: ThemeData.dark(), // Enable dark mode
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
         fontFamily: 'Inter', // Set the font family to Inter
       ),
@@ -87,6 +86,7 @@ class _SetupPageState extends State<SetupPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('catkeys_url', url);
     await prefs.setString('catkeys_token', token);
+    await prefs.setInt('catkeys_posts_shows', 250);
     navHome();
   }
 

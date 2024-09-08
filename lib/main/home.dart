@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:catkeys/main/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -27,7 +28,6 @@ class Home extends StatelessWidget {
       themeMode: ThemeMode.system, // Use device's color scheme
       darkTheme: ThemeData.dark(), // Enable dark mode
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
         fontFamily: 'Inter', // Set the font family to Inter
       ),
@@ -63,6 +63,7 @@ class _HomePageState extends State<HomePage> {
   String userStatus = '-';
   bool userNotificationStatus = false;
   int _selectedChip = 1;
+  int posts = 250;
   final TextEditingController _noteController = TextEditingController();
 
   fetchData() async {
@@ -70,6 +71,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       url = prefs.getString('catkeys_url') ?? '';
       token = prefs.getString('catkeys_token') ?? '';
+      posts = prefs.getInt('catkeys_posts_shows') ?? 250;
     });
     if (url.isNotEmpty && token.isNotEmpty) {
       client = Misskey(
@@ -194,14 +196,12 @@ class _HomePageState extends State<HomePage> {
   Future<List<Note>> fetchNotes() async {
     try {
       final response = await client.notes.homeTimeline(
-        const NotesTimelineRequest(
-          limit: 100,
+        NotesTimelineRequest(
+          limit: posts,
           includeLocalRenotes: false,
           includeMyRenotes: false,
         ),
       );
-      print('Notes fetched: ${response.length}');
-      print('Full response: $response');
       return response.toList();
     } catch (e) {
       return []; // Return an empty list on error
@@ -242,6 +242,13 @@ class _HomePageState extends State<HomePage> {
         textColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  navSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsPage(title: 'Settings')),
+    );
   }
 
   @override
@@ -310,7 +317,8 @@ class _HomePageState extends State<HomePage> {
               },
               onSelected: (value) async {
                 if (value == 'Settings') {
-                  // Do something for option 1
+                  vibrate();
+                  navSettings();
                 } else if (value == 'Refresh Notes') {
                   vibrateSel();
                   refreshNotesD();
@@ -412,8 +420,10 @@ class _HomePageState extends State<HomePage> {
                                               .primary,
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        note.text ?? 'No text',
+                                      
+                                      subtitle: 
+                                      Text(
+                                        note.text ?? note.renote?.text ?? 'No content available',
                                         style: TextStyle(
                                           color: Theme.of(context)
                                               .colorScheme
@@ -424,34 +434,11 @@ class _HomePageState extends State<HomePage> {
                                         backgroundImage: NetworkImage(
                                             note.user.avatarUrl.toString()),
                                       ),
-                                      trailing: note.visibility ==
-                                              NoteVisibility.followers
-                                          ? Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primaryContainer,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                'Followers only',
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onPrimaryContainer,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
+                                        
                                     ),
                                     Row(
                                       children: [
+                                        if (note.renoteId == null)
                                         IconButton(
                                           icon: Icon(
                                             Icons.repeat_rounded,
@@ -461,10 +448,10 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           onPressed: () {
                                             vibrateSel();
-                                            print('Repost ID: ${note.id}');
                                             repostNote(note.id);
                                           },
                                         ),
+                                        if (note.renoteId == null)
                                         Text(
                                           '${note.renoteCount}',
                                           style: TextStyle(
@@ -532,6 +519,62 @@ class _HomePageState extends State<HomePage> {
                                               );
                                             },
                                           ),
+                                        if (note.renoteId != null) ...[
+                                            Container(
+                                              padding: EdgeInsets.only(right: 3.0), // Add padding only on the right side
+                                              decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Theme.of(context).colorScheme.primary,
+                                                width: 1.0,
+                                              ),
+                                              borderRadius: BorderRadius.circular(4.0),
+                                              ),
+                                              child: Row(
+                                              children: [
+                                                Icon(
+                                                Icons.restart_alt_rounded,
+                                                color: Theme.of(context).colorScheme.primary,
+                                                ),
+                                                Text(
+                                                'Renote',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Theme.of(context).colorScheme.primary,
+                                                  fontWeight: FontWeight.bold
+                                                ),
+                                                ),
+                                              ],
+                                              ),
+                                            ),
+                                        ],
+                                        if (note.visibility == NoteVisibility.followers) ...[
+                                            Container(
+                                              padding: EdgeInsets.only(right: 3.0), // Add padding only on the right side
+                                              decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Theme.of(context).colorScheme.primary,
+                                                width: 1.0,
+                                              ),
+                                              borderRadius: BorderRadius.circular(4.0),
+                                              ),
+                                              child: Row(
+                                              children: [
+                                                Icon(
+                                                Icons.lock_rounded,
+                                                color: Theme.of(context).colorScheme.primary,
+                                                ),
+                                                Text(
+                                                'Followers only',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Theme.of(context).colorScheme.primary,
+                                                  fontWeight: FontWeight.bold
+                                                ),
+                                                ),
+                                              ],
+                                              ),
+                                            ),
+                                        ],
                                       ],
                                     ),
                                     const Divider(),
