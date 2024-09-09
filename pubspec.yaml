@@ -31,12 +31,13 @@ dependencies:
   package_info_plus: 8.0.2
   flutter_markdown: ^0.7.3
   device_info_plus: ^9.1.2
-  haptic_feedback: ^0.5.1+1
   misskey_dart:
     git:
       url: https://github.com/shiosyakeyakini-info/misskey_dart
       ref: master
   cached_network_image: ^3.4.1
+  vibration: ^2.0.0
+  share_plus: ^10.0.2
 
 dependency_overrides:
   uuid: ^4.4.0

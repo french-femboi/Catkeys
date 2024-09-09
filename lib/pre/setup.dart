@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 
 import '../main/home.dart';
 
@@ -87,13 +87,31 @@ class _SetupPageState extends State<SetupPage> {
     await prefs.setString('catkeys_url', url);
     await prefs.setString('catkeys_token', token);
     await prefs.setInt('catkeys_posts_shows', 250);
+    await prefs.setBool('catkeys_haptics', true);
     navHome();
   }
 
-  vibrate() async {
-    final can = await Haptics.canVibrate();
-    if (!can) return;
-    await Haptics.vibrate(HapticsType.warning);
+  vibrateSelection() async {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 50);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 50));
+          Vibration.vibrate();
+      }
+    
+  }
+
+  vibrateError() async {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 200);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 200));
+          Vibration.vibrate();
+      }
   }
 
   @override
@@ -228,7 +246,7 @@ class _SetupPageState extends State<SetupPage> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    vibrate();
+                    vibrateError();
                     checkInstance();
                   },
                   style: ElevatedButton.styleFrom(

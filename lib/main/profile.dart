@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:misskey_dart/misskey_dart.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vibration/vibration.dart';
 
 import '../main/home.dart';
 
@@ -76,10 +77,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  fetchUser() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-  }
-
   fetchData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -103,8 +100,6 @@ class _ProfilePageState extends State<ProfilePage> {
           userId: uID, // Replace with the actual user ID
         ),
       );
-      print(res);
-
       setState(() {
         profilePicture = res.avatarUrl.toString(); // Null check
         profileBanner = res.bannerUrl?.toString() ?? '';
@@ -122,16 +117,34 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  vibrate() async {
-    final can = await Haptics.canVibrate();
-    if (!can) return;
-    await Haptics.vibrate(HapticsType.warning);
+  vibrateSelection() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 50);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 50));
+          Vibration.vibrate();
+      }
+    }
   }
 
-  vibrateSel() async {
-    final can = await Haptics.canVibrate();
-    if (!can) return;
-    await Haptics.vibrate(HapticsType.success);
+  vibrateError() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 200);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 200));
+          Vibration.vibrate();
+      }
+    }
   }
 
   openLink(urlInput) async {
@@ -162,22 +175,33 @@ class _ProfilePageState extends State<ProfilePage> {
           title: Row(
             children: [
               GestureDetector(
-                onTap: () {
-                  vibrate();
-                  navHome();
-                },
-                child: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+          onTap: () {
+            vibrateSelection();
+            navHome();
+          },
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
               ),
               SizedBox(width: 20),
               Text(
-                widget.title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+          widget.title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+              ),
+              Spacer(), // Add a spacer to push the share button to the right
+              IconButton(
+          onPressed: () {
+            vibrateSelection();
+            Share.share('Check out this user profile: https://$url/@$userHandle');
+          },
+          icon: Icon(
+            Icons.share,
+            color: Theme.of(context).colorScheme.primary,
+          ),
               ),
             ],
           ),
@@ -393,7 +417,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             const SizedBox(height: 10),
                             ElevatedButton(
                               onPressed: () {
-                                vibrateSel();
+                                vibrateSelection();
                                 if (url == userInstance) {
                                   openLink('https://$url/@$userHandle');
                                 } else {

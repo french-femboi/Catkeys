@@ -2,15 +2,16 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:catkeys/main/settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:misskey_dart/misskey_dart.dart';
 import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vibration/vibration.dart';
 
 import '../pre/setup.dart';
 import 'profile.dart';
@@ -63,7 +64,7 @@ class _HomePageState extends State<HomePage> {
   String userNotes = '-';
   String userDescription = '-';
   String userStatus = '-';
-  bool userNotificationStatus = false;
+  String userID = '';
   int _selectedChip = 1;
   int posts = 250;
   final TextEditingController _noteController = TextEditingController();
@@ -102,7 +103,7 @@ class _HomePageState extends State<HomePage> {
       userNotes = res.notesCount.toString();
       userDescription = res.description.toString();
       userStatus = res.onlineStatus.toString();
-      userNotificationStatus = res.hasUnreadNotification;
+      userID = res.id.toString();
     });
   }
 
@@ -111,16 +112,34 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  vibrate() async {
-    final can = await Haptics.canVibrate();
-    if (!can) return;
-    await Haptics.vibrate(HapticsType.warning);
+  vibrateSelection() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 50);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 50));
+          Vibration.vibrate();
+      }
+    }
   }
 
-  vibrateSel() async {
-    final can = await Haptics.canVibrate();
-    if (!can) return;
-    await Haptics.vibrate(HapticsType.success);
+  vibrateError() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 200);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 200));
+          Vibration.vibrate();
+      }
+    }
   }
 
   createNote() async {
@@ -330,10 +349,10 @@ class _HomePageState extends State<HomePage> {
               },
               onSelected: (value) async {
                 if (value == 'Settings') {
-                  vibrate();
+                  vibrateSelection();
                   navSettings();
                 } else if (value == 'Refresh Notes') {
-                  vibrateSel();
+                  vibrateSelection();
                   refreshNotesD();
                 } else if (value == 'Source Code') {
                   const url = 'https://github.com/french-femboi/Catkeys';
@@ -350,7 +369,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   }
                 } else if (value == 'Log Out') {
-                  vibrate();
+                  vibrateError();
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -362,14 +381,14 @@ class _HomePageState extends State<HomePage> {
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop();
-                              vibrateSel();
+                              vibrateSelection();
                             },
                             child: const Text('Cancel'),
                           ),
                           TextButton(
                             onPressed: () {
                               clearData();
-                              vibrateSel();
+                              vibrateSelection();
                             },
                             child: const Text('Confirm'),
                           ),
@@ -446,7 +465,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         onTapLink: (text, url, title) {
                                           if (url != null) {
-                                            vibrateSel();
+                                            vibrateSelection();
                                             openLink(
                                                 url); // Open the link using the url_launcher package
                                           }
@@ -454,7 +473,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                         leading: GestureDetector(
                                         onTap: () {
-                                          vibrateSel();
+                                          vibrateSelection();
                                           navProfile(note.userId);
                                         },
                                         child: CircleAvatar(
@@ -473,7 +492,7 @@ class _HomePageState extends State<HomePage> {
                                                 .secondary, // Change the color to red
                                           ),
                                           onPressed: () {
-                                            vibrateSel();
+                                            vibrateSelection();
                                             repostNote(note.id);
                                           },
                                         ),
@@ -485,7 +504,7 @@ class _HomePageState extends State<HomePage> {
                                                 .secondary, // Change the color to red
                                           ),
                                           onPressed: () async {
-                                            vibrateSel();
+                                            vibrateSelection();
                                             openLink(
                                                 'https://$url/notes/${note.id}');
                                           },
@@ -499,7 +518,7 @@ class _HomePageState extends State<HomePage> {
                                                   .secondary, // Change the color to red
                                             ),
                                             onPressed: () {
-                                              vibrateSel();
+                                              vibrateSelection();
                                               showDialog(
                                                 context: context,
                                                 builder:
@@ -514,7 +533,7 @@ class _HomePageState extends State<HomePage> {
                                                         onPressed: () {
                                                           Navigator.of(context)
                                                               .pop();
-                                                          vibrateSel();
+                                                          vibrateSelection();
                                                         },
                                                         child: const Text(
                                                             'Cancel'),
@@ -522,7 +541,7 @@ class _HomePageState extends State<HomePage> {
                                                       TextButton(
                                                         onPressed: () {
                                                           deleteNote(note.id);
-                                                          vibrateSel();
+                                                          vibrateSelection();
                                                           Navigator.of(context)
                                                               .pop();
                                                           refreshNotesD();
@@ -892,7 +911,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(height: 10),
                             ElevatedButton(
                               onPressed: () {
-                                vibrateSel();
+                                vibrateSelection();
                                 openLink('https://$url/@$userHandle');
                               },
                               style: ElevatedButton.styleFrom(
@@ -919,6 +938,36 @@ class _HomePageState extends State<HomePage> {
                                       'Open profile in browser'), // Add your desired text
                                 ],
                               ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                vibrateSelection();
+                                navProfile(userID);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.secondary,
+                                backgroundColor: Colors
+                                    .transparent, // Set the button's text color
+                                side: BorderSide(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .secondary), // Add a border to the button
+                                minimumSize: const Size(double.infinity,
+                                    40), // Set the button's width to full width and height to 40
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons
+                                      .exit_to_app_rounded), // Add your desired icon
+                                  SizedBox(
+                                      width:
+                                          8), // Add some spacing between the icon and text
+                                  Text(
+                                      'Open advanced profile view'), // Add your desired text
+                                ],
+                              ),
                             )
                           ],
                         ),
@@ -934,7 +983,7 @@ class _HomePageState extends State<HomePage> {
         floatingActionButton: currentPageIndex == 0
             ? FloatingActionButton(
                 onPressed: () {
-                  vibrateSel();
+                  vibrateSelection();
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -1039,7 +1088,7 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Public'),
                                         selected: _selectedChip == 1,
                                         onSelected: (bool selected) {
-                                          vibrateSel();
+                                          vibrateSelection();
                                           setModalState(() {
                                             _selectedChip = selected ? 1 : 0;
                                           });
@@ -1050,7 +1099,7 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Home'),
                                         selected: _selectedChip == 2,
                                         onSelected: (bool selected) {
-                                          vibrateSel();
+                                          vibrateSelection();
                                           setModalState(() {
                                             _selectedChip = selected ? 2 : 0;
                                           });
@@ -1061,7 +1110,7 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Followers'),
                                         selected: _selectedChip == 3,
                                         onSelected: (bool selected) {
-                                          vibrateSel();
+                                          vibrateSelection();
                                           setModalState(() {
                                             _selectedChip = selected ? 3 : 0;
                                           });
@@ -1074,7 +1123,7 @@ class _HomePageState extends State<HomePage> {
                                     children: [
                                       TextButton(
                                         onPressed: () {
-                                          vibrateSel();
+                                          vibrateSelection();
                                           Navigator.of(context).pop();
                                           _noteController.text = '';
                                           _selectedChip = 1;
@@ -1083,7 +1132,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          vibrateSel();
+                                          vibrateSelection();
                                           createNote();
                                           Navigator.of(context).pop();
 
@@ -1125,7 +1174,7 @@ class _HomePageState extends State<HomePage> {
             labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
             selectedIndex: currentPageIndex,
             onDestinationSelected: (int index) {
-              vibrateSel();
+              vibrateSelection();
               setState(() {
                 currentPageIndex = index;
                 if (currentPageIndex == 3) {

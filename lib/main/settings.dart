@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 
 import '../main/home.dart';
 
@@ -41,6 +41,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _postsController = TextEditingController();
   String dropdownValue = '100';
+  bool hapticFeedback = false;
 
   @override
   void initState() {
@@ -65,19 +66,45 @@ class _SettingsPageState extends State<SettingsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _postsController.text = (prefs.getInt('catkeys_posts_shows').toString());
+      hapticFeedback = prefs.getBool('catkeys_haptics') ?? true;
     });
   }
 
-  vibrate() async {
-    final can = await Haptics.canVibrate();
-    if (!can) return;
-    await Haptics.vibrate(HapticsType.warning);
+  vibrateSelection() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 50);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 50));
+          Vibration.vibrate();
+      }
+    }
+  }
+
+  vibrateError() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+          Vibration.vibrate(duration: 200);
+      } else {
+          Vibration.vibrate();
+          await Future.delayed(Duration(milliseconds: 200));
+          Vibration.vibrate();
+      }
+    }
   }
 
   savePostNumbers() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (int.parse(_postsController.text) <= 100) {
-      await prefs.setInt('catkeys_posts_shows', int.parse(_postsController.text));
+      await prefs.setInt(
+          'catkeys_posts_shows', int.parse(_postsController.text));
       Fluttertoast.showToast(
         msg: "You'll see ${_postsController.text} posts on your home page!",
         toastLength: Toast.LENGTH_LONG,
@@ -85,6 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         textColor: Theme.of(context).colorScheme.onPrimaryContainer,
       );
+      vibrateSelection();
     } else {
       Fluttertoast.showToast(
         msg: 'You cannot load more than 100 posts!',
@@ -93,8 +121,13 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Theme.of(context).colorScheme.errorContainer,
         textColor: Theme.of(context).colorScheme.onErrorContainer,
       );
+      vibrateError();
     }
+  }
 
+  changeHaptics(value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('catkeys_haptics', value);
   }
 
   @override
@@ -111,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               GestureDetector(
                 onTap: () {
-                  vibrate();
+                  vibrateSelection();
                   navHome();
                 },
                 child: Icon(
@@ -119,7 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               Text(
                 widget.title,
                 style: TextStyle(
@@ -152,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           Icons.info_rounded,
                           color: Theme.of(context).colorScheme.secondary,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             "This app is open-source and free to use. If you like it, consider starring the repository on GitHub! And also consider telling me some feedback, I'd love to hear from you!",
@@ -168,61 +201,98 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 8),
-                Divider(),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
+                const Divider(),
+                const SizedBox(height: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  Text(
-                    'Shown posts',
-                    style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                    Text(
+                      'Shown posts',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Control the number of posts shown on your home page.',
-                    style: TextStyle(
-                    fontSize: 18,
-                    color: Theme.of(context).colorScheme.secondary,
+                    Text(
+                      'Control the number of posts shown on your home page.',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: _postsController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: 'Enter a number',
-                      border: OutlineInputBorder(), // Add border to the text field
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _postsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter a number',
+                        border:
+                            OutlineInputBorder(), // Add border to the text field
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  ElevatedButton(
-                  onPressed: () {
-                    vibrate();
-                    savePostNumbers();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainer,
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    minimumSize: const Size(double.infinity, 0),
-                  ),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.secondary,
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        savePostNumbers();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.surfaceContainer,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        minimumSize: const Size(double.infinity, 0),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(height: 8),
-                Divider(),
-                SizedBox(height: 8),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Haptic feedback',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    Text(
+                      'Enable or disable haptic feedback within the app.',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      title: Text(
+                      'Enable Haptic Feedback',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      ),
+                      trailing: Switch(
+                      value: hapticFeedback, // Replace with your switch value
+                      onChanged: (value) {
+                        setState(() {
+                          hapticFeedback = value;
+                          changeHaptics(value);
+                        });
+                      },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ],
