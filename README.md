@@ -1,7 +1,9 @@
 # Catkeys
 I developed this client because I couldn't find any Misskey client app that met my preferences. It's still in very early development and therefore I would recommend not to use it before a real version comes out :<
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N2FINT7) [![Translation status](http://translate.catpawz.eu/widget/catpawz/catkeys/svg-badge.svg)](http://translate.catpawz.eu/engage/catpawz/)
+You can also find this app on the play store! [Play Store](https://play.google.com/store/apps/details?id=com.catpawz.catkeys)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N2FINT7)
 
 ## Built With
 
