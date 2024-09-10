@@ -221,7 +221,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  Future<List<Note>> fetchNotes() async {
+  Future<List<Note>> fetchNotesHome() async {
     try {
       final response = await client.notes.homeTimeline(
         NotesTimelineRequest(
@@ -233,6 +233,33 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       return []; // Return an empty list on error
     }
   }
+
+  Future<List<Note>> fetchNotesLocal() async {
+    try {
+      final response = await client.notes.localTimeline(
+        NotesLocalTimelineRequest(
+          limit: posts,
+        ),
+      );
+      return response.toList();
+    } catch (e) {
+      return []; // Return an empty list on error
+    }
+  }
+
+  Future<List<Note>> fetchNotesGlobal() async {
+    try {
+      final response = await client.notes.globalTimeline(
+        NotesGlobalTimelineRequest(
+          limit: posts,
+        ),
+      );
+      return response.toList();
+    } catch (e) {
+      return []; // Return an empty list on error
+    }
+  }
+
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -470,7 +497,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           children: [
                             // Tab 1 content
                             FutureBuilder<List<Note>>(
-                              future: fetchNotes(),
+                              future: fetchNotesHome(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
@@ -699,16 +726,464 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               },
                             ),
                             // Tab 2 content
-                            Container(
-                              child: Center(
-                                child: Text('Tab 2 Content'),
-                              ),
+                            FutureBuilder<List<Note>>(
+                              future: fetchNotesLocal(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                } else if (snapshot.hasError) {
+                                  return Center(
+                                      child: Text('Error: ${snapshot.error}'));
+                                } else if (!snapshot.hasData ||
+                                    snapshot.data!.isEmpty) {
+                                  return const Center(
+                                      child: Text('No data available'));
+                                }
+                                return ListView.builder(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, index) {
+                                    final note = snapshot.data![index];
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          title: Text(
+                                            note.user.name ?? 'Unknown user',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
+                                          ),
+                                          subtitle: MarkdownBody(
+                                            data: note.text ??
+                                                note.renote?.text ??
+                                                'No content available',
+                                            styleSheet: MarkdownStyleSheet(
+                                              p: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary, // You can style text here
+                                              ),
+                                            ),
+                                            onTapLink: (text, url, title) {
+                                              if (url != null) {
+                                                vibrateSelection();
+                                                openLink(
+                                                    url); // Open the link using the url_launcher package
+                                              }
+                                            },
+                                          ),
+                                          leading: GestureDetector(
+                                            onTap: () {
+                                              vibrateSelection();
+                                              navProfile(note.userId);
+                                            },
+                                            child: CircleAvatar(
+                                              backgroundImage: NetworkImage(note
+                                                  .user.avatarUrl
+                                                  .toString()),
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.repeat_rounded,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary, // Change the color to red
+                                              ),
+                                              onPressed: () {
+                                                vibrateSelection();
+                                                repostNote(note.id);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.open_in_browser_rounded,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary, // Change the color to red
+                                              ),
+                                              onPressed: () async {
+                                                vibrateSelection();
+                                                openLink(
+                                                    'https://$url/notes/${note.id}');
+                                              },
+                                            ),
+                                            if (note.user.username ==
+                                                userHandle)
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.delete_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .secondary, // Change the color to red
+                                                ),
+                                                onPressed: () {
+                                                  vibrateSelection();
+                                                  showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'Deleting Note'),
+                                                        content: const Text(
+                                                            "Are you sure you want to delete this note? This action can't be undone."),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              vibrateSelection();
+                                                            },
+                                                            child: const Text(
+                                                                'Cancel'),
+                                                          ),
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              deleteNote(
+                                                                  note.id);
+                                                              vibrateSelection();
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              refreshNotesD();
+                                                            },
+                                                            child: const Text(
+                                                                'Confirm'),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            if (note.renoteId != null) ...[
+                                              Container(
+                                                padding: EdgeInsets.only(
+                                                    right:
+                                                        3.0), // Add padding only on the right side
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 1.0,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          4.0),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.restart_alt_rounded,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                    ),
+                                                    Text(
+                                                      'Renote',
+                                                      style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                            if (note.visibility ==
+                                                NoteVisibility.followers) ...[
+                                              Container(
+                                                padding: EdgeInsets.only(
+                                                    right:
+                                                        3.0), // Add padding only on the right side
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 1.0,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          4.0),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.lock_rounded,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                    ),
+                                                    Text(
+                                                      'Followers only',
+                                                      style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const Divider(),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
                             ),
                             // Tab 3 content
-                            Container(
-                              child: Center(
-                                child: Text('Tab 3 Content'),
-                              ),
+                            FutureBuilder<List<Note>>(
+                              future: fetchNotesGlobal(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                } else if (snapshot.hasError) {
+                                  return Center(
+                                      child: Text('Error: ${snapshot.error}'));
+                                } else if (!snapshot.hasData ||
+                                    snapshot.data!.isEmpty) {
+                                  return const Center(
+                                      child: Text('No data available'));
+                                }
+                                return ListView.builder(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, index) {
+                                    final note = snapshot.data![index];
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          title: Text(
+                                            note.user.name ?? 'Unknown user',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
+                                          ),
+                                          subtitle: MarkdownBody(
+                                            data: note.text ??
+                                                note.renote?.text ??
+                                                'No content available',
+                                            styleSheet: MarkdownStyleSheet(
+                                              p: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary, // You can style text here
+                                              ),
+                                            ),
+                                            onTapLink: (text, url, title) {
+                                              if (url != null) {
+                                                vibrateSelection();
+                                                openLink(
+                                                    url); // Open the link using the url_launcher package
+                                              }
+                                            },
+                                          ),
+                                          leading: GestureDetector(
+                                            onTap: () {
+                                              vibrateSelection();
+                                              navProfile(note.userId);
+                                            },
+                                            child: CircleAvatar(
+                                              backgroundImage: NetworkImage(note
+                                                  .user.avatarUrl
+                                                  .toString()),
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.repeat_rounded,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary, // Change the color to red
+                                              ),
+                                              onPressed: () {
+                                                vibrateSelection();
+                                                repostNote(note.id);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.open_in_browser_rounded,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary, // Change the color to red
+                                              ),
+                                              onPressed: () async {
+                                                vibrateSelection();
+                                                openLink(
+                                                    'https://$url/notes/${note.id}');
+                                              },
+                                            ),
+                                            if (note.user.username ==
+                                                userHandle)
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.delete_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .secondary, // Change the color to red
+                                                ),
+                                                onPressed: () {
+                                                  vibrateSelection();
+                                                  showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'Deleting Note'),
+                                                        content: const Text(
+                                                            "Are you sure you want to delete this note? This action can't be undone."),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              vibrateSelection();
+                                                            },
+                                                            child: const Text(
+                                                                'Cancel'),
+                                                          ),
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              deleteNote(
+                                                                  note.id);
+                                                              vibrateSelection();
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              refreshNotesD();
+                                                            },
+                                                            child: const Text(
+                                                                'Confirm'),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            if (note.renoteId != null) ...[
+                                              Container(
+                                                padding: EdgeInsets.only(
+                                                    right:
+                                                        3.0), // Add padding only on the right side
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 1.0,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          4.0),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.restart_alt_rounded,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                    ),
+                                                    Text(
+                                                      'Renote',
+                                                      style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                            if (note.visibility ==
+                                                NoteVisibility.followers) ...[
+                                              Container(
+                                                padding: EdgeInsets.only(
+                                                    right:
+                                                        3.0), // Add padding only on the right side
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 1.0,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          4.0),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.lock_rounded,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                    ),
+                                                    Text(
+                                                      'Followers only',
+                                                      style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const Divider(),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -729,7 +1204,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       fit: FlexFit
                           .loose, // Allows children to shrink-wrap rather than expanding infinitely
                       child: FutureBuilder<List<Note>>(
-                        future: fetchNotes(),
+                        future: fetchNotesHome(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
