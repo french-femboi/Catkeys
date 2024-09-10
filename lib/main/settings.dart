@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 
 import '../main/home.dart';
@@ -74,13 +75,14 @@ class _SettingsPageState extends State<SettingsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? status = prefs.getBool('catkeys_haptics');
     if (status == true) {
-            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      final hasCustomVibrationsSupport =
+          await Vibration.hasCustomVibrationsSupport();
       if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
-          Vibration.vibrate(duration: 50);
+        Vibration.vibrate(duration: 50);
       } else {
-          Vibration.vibrate();
-          await Future.delayed(Duration(milliseconds: 50));
-          Vibration.vibrate();
+        Vibration.vibrate();
+        await Future.delayed(Duration(milliseconds: 50));
+        Vibration.vibrate();
       }
     }
   }
@@ -89,13 +91,14 @@ class _SettingsPageState extends State<SettingsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? status = prefs.getBool('catkeys_haptics');
     if (status == true) {
-            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
+      final hasCustomVibrationsSupport =
+          await Vibration.hasCustomVibrationsSupport();
       if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
-          Vibration.vibrate(duration: 200);
+        Vibration.vibrate(duration: 200);
       } else {
-          Vibration.vibrate();
-          await Future.delayed(Duration(milliseconds: 200));
-          Vibration.vibrate();
+        Vibration.vibrate();
+        await Future.delayed(Duration(milliseconds: 200));
+        Vibration.vibrate();
       }
     }
   }
@@ -122,6 +125,21 @@ class _SettingsPageState extends State<SettingsPage> {
         textColor: Theme.of(context).colorScheme.onErrorContainer,
       );
       vibrateError();
+    }
+  }
+
+  openLink(urlInput) async {
+    var url = urlInput;
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      Fluttertoast.showToast(
+        msg: 'There while launching a browser!',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        backgroundColor: Theme.of(context).colorScheme.onErrorContainer,
+        textColor: Theme.of(context).colorScheme.error,
+      );
     }
   }
 
@@ -174,36 +192,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   CrossAxisAlignment.start, // Align text to the start (left)
               children: [
                 const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // Align children to the top
-                      children: [
-                        Icon(
-                          Icons.info_rounded,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            "This app is open-source and free to use. If you like it, consider starring the repository on GitHub! And also consider telling me some feedback, I'd love to hear from you!",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context).colorScheme.secondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.start,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Divider(),
-                const SizedBox(height: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -274,25 +262,220 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 8),
                     ListTile(
                       title: Text(
-                      'Enable Haptic Feedback',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                        'Enable Haptic Feedback',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                       trailing: Switch(
-                      value: hapticFeedback, // Replace with your switch value
-                      onChanged: (value) {
-                        setState(() {
-                          hapticFeedback = value;
-                          changeHaptics(value);
-                        });
-                      },
+                        value: hapticFeedback, // Replace with your switch value
+                        onChanged: (value) {
+                          setState(() {
+                            hapticFeedback = value;
+                            changeHaptics(value);
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Divider(),
                     const SizedBox(height: 8),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align children to the top
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.source_rounded,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "This app is open-source and free to use. If you like it, consider starring the repository on GitHub! And also consider telling me some feedback, I'd love to hear from you!",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                vibrateSelection();
+                                openLink(
+                                    "https://github.com/french-femboi/Catkeys");
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHigh,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                minimumSize: Size(double.infinity, 0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      12), // Change the border radius value
+                                ),
+                              ),
+                              child: Text(
+                                'Open GitHub Repository',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align children to the top
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.code_rounded,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "Here's a list of all the dependencies used in this app. You can check them out on GitHub!",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                vibrateSelection();
+                                openLink(
+                                    "https://github.com/french-femboi/Catkeys/network/dependencies");
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHigh,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                minimumSize: Size(double.infinity, 0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      12), // Change the border radius value
+                                ),
+                              ),
+                              child: Text(
+                                'Open dependencies',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align children to the top
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.shield_rounded,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "This app is licensed under the BSD 3-Clause License, which means you can use it for free, but you can't sell it. You can view the license on GitHub.",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                vibrateSelection();
+                                openLink(
+                                    "https://github.com/french-femboi/Catkeys/blob/main/LICENSE");
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHigh,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                minimumSize: Size(double.infinity, 0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      12), // Change the border radius value
+                                ),
+                              ),
+                              child: Text(
+                                'View license',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ],
