@@ -48,6 +48,22 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+class Notification {
+  final String title; // Example property
+  final String body;  // Example property
+
+  // Constructor
+  Notification({required this.title, required this.body});
+
+  // Static method to create a Notification from INotificationsResponse
+  static Notification fromResponse(INotificationsResponse response) {
+    return Notification(
+      title: response.header ?? 'No notification title', // Assuming INotificationsResponse has a title property
+      body: response.body ?? 'No notification content',   // Assuming INotificationsResponse has a body property
+    );
+  }
+}
+
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late Misskey client;
   String url = '';
@@ -90,7 +106,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     fetchData();
 
     tabs1.addListener(() {
-          vibrateSelection();
+      vibrateSelection();
     });
   }
 
@@ -125,7 +141,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Vibration.vibrate(duration: 50);
       } else {
         Vibration.vibrate();
-        await Future.delayed(Duration(milliseconds: 50));
+        await Future.delayed(const Duration(milliseconds: 50));
         Vibration.vibrate();
       }
     }
@@ -141,7 +157,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Vibration.vibrate(duration: 200);
       } else {
         Vibration.vibrate();
-        await Future.delayed(Duration(milliseconds: 200));
+        await Future.delayed(const Duration(milliseconds: 200));
         Vibration.vibrate();
       }
     }
@@ -260,6 +276,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  
+
+Future<List<Notification>> fetchNotifications() async {
+  try {
+    final response = await client.i.notifications(
+      INotificationsRequest(
+        limit: posts, // Adjust the limit if needed
+      ),
+    );
+
+    // Convert the response to a List<Notification>
+    List<Notification> notifications = response.map((item) {
+      return Notification.fromResponse(item);
+    }).toList();
+
+    return notifications;
+  } catch (e) {
+    return []; // Return an empty list on error
+  }
+}
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -450,7 +486,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       DefaultTabController(
                           length: 3,
                           child: Container(
-                            color: Theme.of(context).colorScheme.surfaceContainer, // Change this to your desired background color
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainer, // Change this to your desired background color
                             child: TabBar(
                               controller: tabs1,
                               tabs: const [
@@ -484,7 +522,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                     ],
                                   ),
                                 ),
-                              ], 
+                              ],
                             ),
                           )),
                       SizedBox(
@@ -1199,49 +1237,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   mainAxisSize: MainAxisSize
                       .min, // This ensures the Column only takes the space it needs
                   children: [
-                    Flexible(
-                      // Use Flexible instead of Expanded
-                      fit: FlexFit
-                          .loose, // Allows children to shrink-wrap rather than expanding infinitely
-                      child: FutureBuilder<List<Note>>(
-                        future: fetchNotesHome(),
+                    SizedBox(
+                        height: MediaQuery.of(context).size.height -
+                            kToolbarHeight - // Subtract the app bar height
+                            kBottomNavigationBarHeight -
+                            63, // Subtract the bottom nav bar height/ Allows children to shrink-wrap rather than expanding infinitely
+                      child: FutureBuilder<List<Notification>>(
+                        future: fetchNotifications(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
+                            return Center(
+                                child:
+                                    CircularProgressIndicator()); // Loading spinner while fetching
                           } else if (snapshot.hasError) {
                             return Center(
-                                child: Text('Error: ${snapshot.error}'));
+                                child: Text(
+                                    'Error: ${snapshot.error}')); // Error message
                           } else if (!snapshot.hasData ||
                               snapshot.data!.isEmpty) {
-                            return const Center(
-                                child: Text('No data available'));
-                          }
-                          return ListView.builder(
-                            shrinkWrap:
-                                true, // Add this to allow ListView to size itself properly
-                            physics:
-                                const NeverScrollableScrollPhysics(), // Prevent ListView from being scrollable if nested
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              final note = snapshot.data![index];
+                            return Center(
+                                child: Text(
+                                    'No notifications available.')); // Empty list message
+                          } else {
+                            // If the data is ready and not empty
+                            final notifications = snapshot.data!;
+                            return ListView.builder(
+                              itemCount: notifications.length,
+                              itemBuilder: (context, index) {
+                              final notification = notifications[index];
                               return Column(
                                 children: [
-                                  ListTile(
-                                    title:
-                                        Text(note.user.name ?? 'Unknown user'),
-                                    subtitle: Text(note.text ?? 'No text'),
-                                    leading: CircleAvatar(
-                                      backgroundImage: NetworkImage(
-                                          (note.user.avatarUrl).toString()),
-                                    ),
-                                  ),
-                                  const Divider(), // Add a divider at the bottom
+                                ListTile(
+                                  title: Text(notification.title ??
+                                    'No Title'), // Adjust according to notification fields
+                                  subtitle: Text(
+                                    notification.body ?? 'No Content'),
+                                ),
+                                Divider(), // Add a divider after each ListTile
                                 ],
                               );
-                            },
-                          );
+                              },
+                            );
+                          }
                         },
                       ),
                     ),
