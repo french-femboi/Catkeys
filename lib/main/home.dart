@@ -32,7 +32,7 @@ class Home extends StatelessWidget {
       darkTheme: ThemeData.dark(), // Enable dark mode
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'Inter', // Set the font family to Inter
+        fontFamily: 'Inter', 
       ),
       home: const HomePage(title: 'Catkeys'),
     );
