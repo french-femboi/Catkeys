@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -21,15 +22,24 @@ class Profile extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'User profile',
-      themeMode: ThemeMode.system, // Use device's color scheme
-      darkTheme: ThemeData.dark(), // Enable dark mode
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Inter', // Set the font family to Inter
-      ),
-      home: const ProfilePage(title: 'User profile'),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        return MaterialApp(
+          title: 'User Profile',
+          themeMode: ThemeMode.system, // Use device's color scheme
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
+            fontFamily: 'Inter', // Set the font family to Inter
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            fontFamily: 'Inter',
+          ),
+          home: const ProfilePage(title: 'User Profile'),
+        );
+      },
     );
   }
 }

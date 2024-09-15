@@ -2,6 +2,7 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:catkeys/main/settings.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,15 +27,24 @@ class Home extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Catkeys',
-      themeMode: ThemeMode.system, // Use device's color scheme
-      darkTheme: ThemeData.dark(), // Enable dark mode
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Inter', 
-      ),
-      home: const HomePage(title: 'Catkeys'),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        return MaterialApp(
+          title: 'Catkeys',
+          themeMode: ThemeMode.system, // Use device's color scheme
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
+            fontFamily: 'Inter', // Set the font family to Inter
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            fontFamily: 'Inter',
+          ),
+          home: const HomePage(title: 'Catkeys'),
+        );
+      },
     );
   }
 }

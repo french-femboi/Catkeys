@@ -22,12 +22,12 @@ class MyApp extends StatelessWidget {
           themeMode: ThemeMode.system, // Use device's color scheme
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: lightDynamic ?? ColorScheme.fromSeed(seedColor: Colors.purple),
+            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
             fontFamily: 'Inter', // Set the font family to Inter
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
-            colorScheme: darkDynamic ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
           ),
           home: const MyHomePage(title: 'Catkeys'),
         );

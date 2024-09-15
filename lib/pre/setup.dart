@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,15 +16,24 @@ class Setup extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Catkeys setup',
-      themeMode: ThemeMode.system, // Use device's color scheme
-      darkTheme: ThemeData.dark(), // Enable dark mode
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Inter', // Set the font family to Inter
-      ),
-      home: const SetupPage(title: 'Catkeys setup'),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        return MaterialApp(
+          title: 'Setup',
+          themeMode: ThemeMode.system, // Use device's color scheme
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
+            fontFamily: 'Inter', // Set the font family to Inter
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            fontFamily: 'Inter',
+          ),
+          home: const SetupPage(title: 'Setup'),
+        );
+      },
     );
   }
 }
