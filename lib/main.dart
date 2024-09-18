@@ -1,11 +1,16 @@
 import 'package:catkeys/pre/setup.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'main/home.dart';
 
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ));
   runApp(const MyApp());
 }
 
@@ -22,12 +27,13 @@ class MyApp extends StatelessWidget {
           themeMode: ThemeMode.system, // Use device's color scheme
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
+            colorScheme: darkDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
             fontFamily: 'Inter', // Set the font family to Inter
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            fontFamily: 'Inter',
           ),
           home: const MyHomePage(title: 'Catkeys'),
         );

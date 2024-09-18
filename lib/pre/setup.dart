@@ -7,6 +7,10 @@ import 'package:vibration/vibration.dart';
 import '../main/home.dart';
 
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ));
   runApp(const Setup());
 }
 
@@ -133,7 +137,7 @@ class _SetupPageState extends State<SetupPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Text(
             widget.title,
             style: TextStyle(

@@ -13,6 +13,10 @@ import 'package:vibration/vibration.dart';
 import '../main/home.dart';
 
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ));
   runApp(const Profile());
 }
 
@@ -181,7 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Row(
             children: [
               GestureDetector(
@@ -321,7 +325,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.secondary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -329,7 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Theme.of(context).colorScheme.secondary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -353,9 +357,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     const SizedBox(height: 4),
                                     Text(userNotes,
                                         style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)), // Replace '200' with the actual value
+                                            color: Colors.white,)), // Replace '200' with the actual value
                                   ],
                                 ),
                                 const SizedBox(width: 28),
@@ -374,9 +376,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     const SizedBox(height: 4),
                                     Text(userFollowing,
                                         style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)), // Replace '200' with the actual value
+                                            color: Colors.white,)), // Replace '200' with the actual value
                                   ],
                                 ),
                                 const SizedBox(width: 28),
@@ -395,9 +395,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     const SizedBox(height: 4),
                                     Text(userFollowers,
                                         style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)), // Replace '100' with the actual value
+                                            color: Colors.white,)), // Replace '100' with the actual value
                                   ],
                                 ),
                               ],
@@ -411,9 +409,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               styleSheet: MarkdownStyleSheet(
                                 p: TextStyle(
                                   fontSize: 16,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .secondary, // Text style
+                                  color: Colors.white, // Text style
                                 ),
                               ),
                               onTapLink: (text, url, title) {

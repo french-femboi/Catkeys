@@ -18,7 +18,12 @@ import '../pre/setup.dart';
 import 'profile.dart';
 
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ));
   runApp(const Home());
+
 }
 
 class Home extends StatelessWidget {
@@ -370,7 +375,7 @@ Future<List<Notification>> fetchNotifications() async {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Text(
             widget.title,
             style: TextStyle(
@@ -496,9 +501,7 @@ Future<List<Notification>> fetchNotifications() async {
                       DefaultTabController(
                           length: 3,
                           child: Container(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainer, // Change this to your desired background color
+                            color:Theme.of(context).colorScheme.primary.withOpacity(0.1), // Change this to your desired background color
                             child: TabBar(
                               controller: tabs1,
                               tabs: const [
@@ -582,10 +585,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 note.renote?.text ??
                                                 'No content available',
                                             styleSheet: MarkdownStyleSheet(
-                                              p: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .secondary, // You can style text here
+                                              p: const TextStyle(
+                                                color: Colors.white, // You can style text here
                                               ),
                                             ),
                                             onTapLink: (text, url, title) {
@@ -687,7 +688,7 @@ Future<List<Notification>> fetchNotifications() async {
                                               ),
                                             if (note.renoteId != null) ...[
                                               Container(
-                                                padding: EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                     right:
                                                         3.0), // Add padding only on the right side
                                                 decoration: BoxDecoration(
@@ -727,7 +728,7 @@ Future<List<Notification>> fetchNotifications() async {
                                             if (note.visibility ==
                                                 NoteVisibility.followers) ...[
                                               Container(
-                                                padding: EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                     right:
                                                         3.0), // Add padding only on the right side
                                                 decoration: BoxDecoration(
@@ -812,10 +813,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 note.renote?.text ??
                                                 'No content available',
                                             styleSheet: MarkdownStyleSheet(
-                                              p: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .secondary, // You can style text here
+                                              p: const TextStyle(
+                                                color: Colors.white, // You can style text here
                                               ),
                                             ),
                                             onTapLink: (text, url, title) {
@@ -917,7 +916,7 @@ Future<List<Notification>> fetchNotifications() async {
                                               ),
                                             if (note.renoteId != null) ...[
                                               Container(
-                                                padding: EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                     right:
                                                         3.0), // Add padding only on the right side
                                                 decoration: BoxDecoration(
@@ -957,7 +956,7 @@ Future<List<Notification>> fetchNotifications() async {
                                             if (note.visibility ==
                                                 NoteVisibility.followers) ...[
                                               Container(
-                                                padding: EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                     right:
                                                         3.0), // Add padding only on the right side
                                                 decoration: BoxDecoration(
@@ -1042,10 +1041,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 note.renote?.text ??
                                                 'No content available',
                                             styleSheet: MarkdownStyleSheet(
-                                              p: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .secondary, // You can style text here
+                                              p: const TextStyle(
+                                                color: Colors.white, // You can style text here
                                               ),
                                             ),
                                             onTapLink: (text, url, title) {
@@ -1147,7 +1144,7 @@ Future<List<Notification>> fetchNotifications() async {
                                               ),
                                             if (note.renoteId != null) ...[
                                               Container(
-                                                padding: EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                     right:
                                                         3.0), // Add padding only on the right side
                                                 decoration: BoxDecoration(
@@ -1187,7 +1184,7 @@ Future<List<Notification>> fetchNotifications() async {
                                             if (note.visibility ==
                                                 NoteVisibility.followers) ...[
                                               Container(
-                                                padding: EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                     right:
                                                         3.0), // Add padding only on the right side
                                                 decoration: BoxDecoration(
@@ -1257,7 +1254,7 @@ Future<List<Notification>> fetchNotifications() async {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return Center(
+                            return const Center(
                                 child:
                                     CircularProgressIndicator()); // Loading spinner while fetching
                           } else if (snapshot.hasError) {
@@ -1266,7 +1263,7 @@ Future<List<Notification>> fetchNotifications() async {
                                     'Error: ${snapshot.error}')); // Error message
                           } else if (!snapshot.hasData ||
                               snapshot.data!.isEmpty) {
-                            return Center(
+                            return const Center(
                                 child: Text(
                                     'No notifications available.')); // Empty list message
                           } else {
@@ -1284,7 +1281,7 @@ Future<List<Notification>> fetchNotifications() async {
                                   subtitle: Text(
                                     notification.body ?? 'No Content'),
                                 ),
-                                Divider(), // Add a divider after each ListTile
+                                const Divider(), // Add a divider after each ListTile
                                 ],
                               );
                               },
@@ -1398,18 +1395,18 @@ Future<List<Notification>> fetchNotifications() async {
                             const SizedBox(height: 10),
                             Text(
                               '@$userHandle - $url',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.secondary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
-                                color: Theme.of(context).colorScheme.secondary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -1432,10 +1429,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 .secondary)),
                                     const SizedBox(height: 4),
                                     Text(userNotes,
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)), // Replace '200' with the actual value
+                                        style: const TextStyle(
+                                            color: Colors.white,)), // Replace '200' with the actual value
                                   ],
                                 ),
                                 const SizedBox(width: 28),
@@ -1453,10 +1448,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 .secondary)),
                                     const SizedBox(height: 4),
                                     Text(userFollowing,
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)), // Replace '200' with the actual value
+                                        style: const TextStyle(
+                                            color: Colors.white,)), // Replace '200' with the actual value
                                   ],
                                 ),
                                 const SizedBox(width: 28),
@@ -1474,10 +1467,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 .secondary)),
                                     const SizedBox(height: 4),
                                     Text(userFollowers,
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)), // Replace '100' with the actual value
+                                        style: const TextStyle(
+                                            color: Colors.white,)), // Replace '100' with the actual value
                                   ],
                                 ),
                               ],
@@ -1489,11 +1480,9 @@ Future<List<Notification>> fetchNotifications() async {
                               data: userDescription ??
                                   'No description available', // Markdown text
                               styleSheet: MarkdownStyleSheet(
-                                p: TextStyle(
+                                p: const TextStyle(
                                   fontSize: 16,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .secondary, // Text style
+                                  color: Colors.white, // Text style
                                 ),
                               ),
                               onTapLink: (text, url, title) {
@@ -1578,6 +1567,7 @@ Future<List<Notification>> fetchNotifications() async {
         ),
         floatingActionButton: currentPageIndex == 0
             ? FloatingActionButton(
+
                 onPressed: () {
                   vibrateSelection();
                   showModalBottomSheet(
@@ -1759,15 +1749,17 @@ Future<List<Notification>> fetchNotifications() async {
                     },
                   );
                 },
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                 child: const Icon(
                     Icons.edit_rounded), // Customize the background color here
               )
             : null,
         bottomNavigationBar: SizedBox(
+          
           height: 60, // Adjust the height as desired
           child: NavigationBar(
             labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
             selectedIndex: currentPageIndex,
             onDestinationSelected: (int index) {
               vibrateSelection();

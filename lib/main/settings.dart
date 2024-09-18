@@ -9,6 +9,10 @@ import 'package:vibration/vibration.dart';
 import '../main/home.dart';
 
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ));
   runApp(const Settings());
 }
 
@@ -167,7 +171,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Row(
             children: [
               GestureDetector(
@@ -217,7 +221,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       'Control the number of posts shown on your home page.',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Theme.of(context).colorScheme.secondary,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -238,7 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor:
-                            Theme.of(context).colorScheme.surfaceContainer,
+                            Theme.of(context).colorScheme.primary.withOpacity(0.1),
                         padding: const EdgeInsets.symmetric(vertical: 6),
                         minimumSize: const Size(double.infinity, 0),
                       ),
@@ -266,7 +270,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       'Enable or disable haptic feedback within the app.',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Theme.of(context).colorScheme.secondary,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -292,6 +296,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     const Divider(),
                     const SizedBox(height: 8),
                     Card(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -312,9 +317,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     "This app is open-source and free to use. If you like it, consider starring the repository on GitHub! And also consider telling me some feedback, I'd love to hear from you!",
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     textAlign: TextAlign.start,
@@ -357,6 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     const SizedBox(height: 8),
                     Card(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -377,9 +381,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     "Here's a list of all the dependencies used in this app. You can check them out on GitHub!",
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     textAlign: TextAlign.start,
@@ -422,6 +424,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     const SizedBox(height: 8),
                     Card(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -442,9 +445,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     "This app is licensed under the BSD 3-Clause License, which means you can use it for free, but you can't sell it. You can view the license on GitHub.",
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     textAlign: TextAlign.start,
