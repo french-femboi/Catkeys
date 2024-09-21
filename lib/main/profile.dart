@@ -185,6 +185,10 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
+                      systemOverlayStyle: const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ),
           backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Row(
             children: [

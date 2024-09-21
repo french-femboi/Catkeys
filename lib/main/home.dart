@@ -21,9 +21,12 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarIconBrightness: Brightness.light, // Light icons on dark background
     statusBarColor: Colors.transparent, // Make status bar transparent
+    systemNavigationBarColor:
+        Colors.transparent, // Make navigation bar transparent
+    systemNavigationBarIconBrightness:
+        Brightness.light, // Light icons on navigation bar
   ));
   runApp(const Home());
-
 }
 
 class Home extends StatelessWidget {
@@ -36,15 +39,12 @@ class Home extends StatelessWidget {
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return MaterialApp(
           title: 'Catkeys',
-          themeMode: ThemeMode.system, // Use device's color scheme
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
-            fontFamily: 'Inter', // Set the font family to Inter
-          ),
+          themeMode: ThemeMode.dark,
           darkTheme: ThemeData(
             useMaterial3: true,
-            colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            colorScheme: darkDynamic?.harmonized() ??
+                ColorScheme.fromSeed(
+                    seedColor: Colors.purple, brightness: Brightness.dark),
             fontFamily: 'Inter',
           ),
           home: const HomePage(title: 'Catkeys'),
@@ -65,7 +65,7 @@ class HomePage extends StatefulWidget {
 
 class Notification {
   final String title; // Example property
-  final String body;  // Example property
+  final String body; // Example property
 
   // Constructor
   Notification({required this.title, required this.body});
@@ -73,8 +73,10 @@ class Notification {
   // Static method to create a Notification from INotificationsResponse
   static Notification fromResponse(INotificationsResponse response) {
     return Notification(
-      title: response.header ?? 'No notification title', // Assuming INotificationsResponse has a title property
-      body: response.body ?? 'No notification content',   // Assuming INotificationsResponse has a body property
+      title: response.header ??
+          'No notification title', // Assuming INotificationsResponse has a title property
+      body: response.body ??
+          'No notification content', // Assuming INotificationsResponse has a body property
     );
   }
 }
@@ -123,6 +125,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     tabs1.addListener(() {
       vibrateSelection();
     });
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarIconBrightness:
+          Brightness.light, // Light icons on dark background
+      statusBarColor: Colors.transparent, // Make status bar transparent
+      systemNavigationBarColor:
+          Colors.transparent, // Make navigation bar transparent
+      systemNavigationBarIconBrightness:
+          Brightness.light, // Light icons on navigation bar
+    ));
   }
 
   lookupAccount() async {
@@ -291,26 +303,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  
+  Future<List<Notification>> fetchNotifications() async {
+    try {
+      final response = await client.i.notifications(
+        INotificationsRequest(
+          limit: posts, // Adjust the limit if needed
+        ),
+      );
 
-Future<List<Notification>> fetchNotifications() async {
-  try {
-    final response = await client.i.notifications(
-      INotificationsRequest(
-        limit: posts, // Adjust the limit if needed
-      ),
-    );
+      // Convert the response to a List<Notification>
+      List<Notification> notifications = response.map((item) {
+        return Notification.fromResponse(item);
+      }).toList();
 
-    // Convert the response to a List<Notification>
-    List<Notification> notifications = response.map((item) {
-      return Notification.fromResponse(item);
-    }).toList();
-
-    return notifications;
-  } catch (e) {
-    return []; // Return an empty list on error
+      return notifications;
+    } catch (e) {
+      return []; // Return an empty list on error
+    }
   }
-}
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -368,6 +378,15 @@ Future<List<Notification>> fetchNotifications() async {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarIconBrightness:
+          Brightness.light, // Light icons on dark background
+      statusBarColor: Colors.transparent, // Make status bar transparent
+      systemNavigationBarColor:
+          Colors.transparent, // Make navigation bar transparent
+      systemNavigationBarIconBrightness:
+          Brightness.light, // Light icons on navigation bar
+    ));
     return WillPopScope(
       onWillPop: () {
         return Future.value(false);
@@ -375,7 +394,12 @@ Future<List<Notification>> fetchNotifications() async {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            systemOverlayStyle: const SystemUiOverlayStyle(
+    statusBarIconBrightness: Brightness.light, // Light icons on dark background
+    statusBarColor: Colors.transparent, // Make status bar transparent
+  ),
+          backgroundColor:
+              Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Text(
             widget.title,
             style: TextStyle(
@@ -501,7 +525,11 @@ Future<List<Notification>> fetchNotifications() async {
                       DefaultTabController(
                           length: 3,
                           child: Container(
-                            color:Theme.of(context).colorScheme.primary.withOpacity(0.1), // Change this to your desired background color
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(
+                                    0.1), // Change this to your desired background color
                             child: TabBar(
                               controller: tabs1,
                               tabs: const [
@@ -586,7 +614,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 'No content available',
                                             styleSheet: MarkdownStyleSheet(
                                               p: const TextStyle(
-                                                color: Colors.white, // You can style text here
+                                                color: Colors
+                                                    .white, // You can style text here
                                               ),
                                             ),
                                             onTapLink: (text, url, title) {
@@ -814,7 +843,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 'No content available',
                                             styleSheet: MarkdownStyleSheet(
                                               p: const TextStyle(
-                                                color: Colors.white, // You can style text here
+                                                color: Colors
+                                                    .white, // You can style text here
                                               ),
                                             ),
                                             onTapLink: (text, url, title) {
@@ -1042,7 +1072,8 @@ Future<List<Notification>> fetchNotifications() async {
                                                 'No content available',
                                             styleSheet: MarkdownStyleSheet(
                                               p: const TextStyle(
-                                                color: Colors.white, // You can style text here
+                                                color: Colors
+                                                    .white, // You can style text here
                                               ),
                                             ),
                                             onTapLink: (text, url, title) {
@@ -1245,10 +1276,10 @@ Future<List<Notification>> fetchNotifications() async {
                       .min, // This ensures the Column only takes the space it needs
                   children: [
                     SizedBox(
-                        height: MediaQuery.of(context).size.height -
-                            kToolbarHeight - // Subtract the app bar height
-                            kBottomNavigationBarHeight -
-                            63, // Subtract the bottom nav bar height/ Allows children to shrink-wrap rather than expanding infinitely
+                      height: MediaQuery.of(context).size.height -
+                          kToolbarHeight - // Subtract the app bar height
+                          kBottomNavigationBarHeight -
+                          63, // Subtract the bottom nav bar height/ Allows children to shrink-wrap rather than expanding infinitely
                       child: FutureBuilder<List<Notification>>(
                         future: fetchNotifications(),
                         builder: (context, snapshot) {
@@ -1272,18 +1303,18 @@ Future<List<Notification>> fetchNotifications() async {
                             return ListView.builder(
                               itemCount: notifications.length,
                               itemBuilder: (context, index) {
-                              final notification = notifications[index];
-                              return Column(
-                                children: [
-                                ListTile(
-                                  title: Text(notification.title ??
-                                    'No Title'), // Adjust according to notification fields
-                                  subtitle: Text(
-                                    notification.body ?? 'No Content'),
-                                ),
-                                const Divider(), // Add a divider after each ListTile
-                                ],
-                              );
+                                final notification = notifications[index];
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      title: Text(notification.title ??
+                                          'No Title'), // Adjust according to notification fields
+                                      subtitle: Text(
+                                          notification.body ?? 'No Content'),
+                                    ),
+                                    const Divider(), // Add a divider after each ListTile
+                                  ],
+                                );
                               },
                             );
                           }
@@ -1430,7 +1461,8 @@ Future<List<Notification>> fetchNotifications() async {
                                     const SizedBox(height: 4),
                                     Text(userNotes,
                                         style: const TextStyle(
-                                            color: Colors.white,)), // Replace '200' with the actual value
+                                          color: Colors.white,
+                                        )), // Replace '200' with the actual value
                                   ],
                                 ),
                                 const SizedBox(width: 28),
@@ -1449,7 +1481,8 @@ Future<List<Notification>> fetchNotifications() async {
                                     const SizedBox(height: 4),
                                     Text(userFollowing,
                                         style: const TextStyle(
-                                            color: Colors.white,)), // Replace '200' with the actual value
+                                          color: Colors.white,
+                                        )), // Replace '200' with the actual value
                                   ],
                                 ),
                                 const SizedBox(width: 28),
@@ -1468,7 +1501,8 @@ Future<List<Notification>> fetchNotifications() async {
                                     const SizedBox(height: 4),
                                     Text(userFollowers,
                                         style: const TextStyle(
-                                            color: Colors.white,)), // Replace '100' with the actual value
+                                          color: Colors.white,
+                                        )), // Replace '100' with the actual value
                                   ],
                                 ),
                               ],
@@ -1567,7 +1601,6 @@ Future<List<Notification>> fetchNotifications() async {
         ),
         floatingActionButton: currentPageIndex == 0
             ? FloatingActionButton(
-
                 onPressed: () {
                   vibrateSelection();
                   showModalBottomSheet(
@@ -1749,17 +1782,18 @@ Future<List<Notification>> fetchNotifications() async {
                     },
                   );
                 },
-                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.3),
                 child: const Icon(
                     Icons.edit_rounded), // Customize the background color here
               )
             : null,
         bottomNavigationBar: SizedBox(
-          
           height: 60, // Adjust the height as desired
           child: NavigationBar(
             labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            backgroundColor:
+                Theme.of(context).colorScheme.primary.withOpacity(0.1),
             selectedIndex: currentPageIndex,
             onDestinationSelected: (int index) {
               vibrateSelection();
