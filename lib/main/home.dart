@@ -627,157 +627,225 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                           subtitle: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
-children: [
-  if (note.text != null || note.renote?.text != null)
-    MarkdownBody(
-      data: note.text ?? note.renote?.text ?? 'No content available',
-      styleSheet: MarkdownStyleSheet(
-        p: const TextStyle(
-          color: Colors.white,
-        ),
-      ),
-      onTapLink: (text, url, title) {
-        if (url != null) {
-          vibrateSelection();
-          openLink(url);
-        }
-      },
-    ),
-  if (note.files != null && note.files!.isNotEmpty)
-    Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
-        children: note.files!.map((file) {
-          return FutureBuilder<bool>(
-            future: isVideoFile(file.url), // Check if it's a video
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return const Icon(Icons.error);
-              } else if (snapshot.hasData && snapshot.data!) {
-                // It's a video, display video-related UI
-                return GestureDetector(
-                  onTap: () {
-                    vibrateSelection(); // Trigger vibration on video tap
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VideoPlayerPage(videoUrl: file.url),
-                      ),
-                    );
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.only(right: 3.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 1.0,
-                          ),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.movie_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            Text(
-                              'Click to open attached video',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                // It's an image, display the image and open lightbox on tap
-                return GestureDetector(
-                  onTap: () {
-                    vibrateSelection(); // Trigger vibration on image tap
+                                            children: [
+                                              if (note.text != null ||
+                                                  note.renote?.text != null)
+                                                MarkdownBody(
+                                                  data: note.text ??
+                                                      note.renote?.text ??
+                                                      'No content available',
+                                                  styleSheet:
+                                                      MarkdownStyleSheet(
+                                                    p: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  onTapLink:
+                                                      (text, url, title) {
+                                                    if (url != null) {
+                                                      vibrateSelection();
+                                                      openLink(url);
+                                                    }
+                                                  },
+                                                ),
+                                              if (note.files != null &&
+                                                  note.files!.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 8.0),
+                                                  child: Wrap(
+                                                    spacing: 8.0,
+                                                    runSpacing: 8.0,
+                                                    children:
+                                                        note.files!.map((file) {
+                                                      return FutureBuilder<
+                                                          bool>(
+                                                        future: isVideoFile(file
+                                                            .url), // Check if it's a video
+                                                        builder: (context,
+                                                            snapshot) {
+                                                          if (snapshot
+                                                                  .connectionState ==
+                                                              ConnectionState
+                                                                  .waiting) {
+                                                            return const CircularProgressIndicator();
+                                                          } else if (snapshot
+                                                              .hasError) {
+                                                            return const Icon(
+                                                                Icons.error);
+                                                          } else if (snapshot
+                                                                  .hasData &&
+                                                              snapshot.data!) {
+                                                            // It's a video, display video-related UI
+                                                            return GestureDetector(
+                                                              onTap: () {
+                                                                vibrateSelection(); // Trigger vibration on video tap
+                                                                Navigator.push(
+                                                                  context,
+                                                                  MaterialPageRoute(
+                                                                    builder: (context) =>
+                                                                        VideoPlayerPage(
+                                                                            videoUrl:
+                                                                                file.url),
+                                                                  ),
+                                                                );
+                                                              },
+                                                              child: Stack(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                children: [
+                                                                  Container(
+                                                                    padding: const EdgeInsets
+                                                                        .only(
+                                                                        right:
+                                                                            3.0),
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      border:
+                                                                          Border
+                                                                              .all(
+                                                                        color: Theme.of(context)
+                                                                            .colorScheme
+                                                                            .primary,
+                                                                        width:
+                                                                            1.0,
+                                                                      ),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              4.0),
+                                                                    ),
+                                                                    child: Row(
+                                                                      children: [
+                                                                        Icon(
+                                                                          Icons
+                                                                              .movie_rounded,
+                                                                          color: Theme.of(context)
+                                                                              .colorScheme
+                                                                              .primary,
+                                                                        ),
+                                                                        Text(
+                                                                          'Click to open attached video',
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                12,
+                                                                            color:
+                                                                                Theme.of(context).colorScheme.primary,
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            );
+                                                          } else {
+                                                            // It's an image, display the image and open lightbox on tap
+                                                            return GestureDetector(
+                                                              onTap: () {
+                                                                vibrateSelection(); // Trigger vibration on image tap
 
-                    // Open lightbox for image
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return Material(
-                          color: Colors.transparent,
-                          child: Stack(
-                            children: [
-                              BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: MediaQuery.of(context).size.height,
-                                ),
-                              ),
-                              // Full-screen image
-                              InteractiveViewer(
-                                minScale: 0.8,
-                                maxScale: 4.0,
-                                child: Center(
-                                  child: Image.network(
-                                    file.url,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                              // Close button
-                              Positioned(
-                                top: 16,
-                                left: 16,
-                                child: IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.white),
-                                  onPressed: () {
-                                    vibrateSelection();
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1.0,
-                      ),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7.0),
-                      child: Image.network(
-                        file.url,
-                        fit: BoxFit.cover,
-                        height: 150,
-                        width: 150,
-                      ),
-                    ),
-                  ),
-                );
-              }
-            },
-          );
-        }).toList(),
-      ),
-    ),
-],
-
+                                                                // Open lightbox for image
+                                                                showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (BuildContext
+                                                                          context) {
+                                                                    return Material(
+                                                                      color: Colors
+                                                                          .transparent,
+                                                                      child:
+                                                                          Stack(
+                                                                        children: [
+                                                                          BackdropFilter(
+                                                                            filter:
+                                                                                ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                                                            child:
+                                                                                Container(
+                                                                              width: MediaQuery.of(context).size.width,
+                                                                              height: MediaQuery.of(context).size.height,
+                                                                            ),
+                                                                          ),
+                                                                          // Full-screen image
+                                                                          InteractiveViewer(
+                                                                            minScale:
+                                                                                0.8,
+                                                                            maxScale:
+                                                                                4.0,
+                                                                            child:
+                                                                                Center(
+                                                                              child: Image.network(
+                                                                                file.url,
+                                                                                fit: BoxFit.contain,
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          // Close button
+                                                                          Positioned(
+                                                                            top:
+                                                                                16,
+                                                                            left:
+                                                                                16,
+                                                                            child:
+                                                                                IconButton(
+                                                                              icon: const Icon(Icons.close, color: Colors.white),
+                                                                              onPressed: () {
+                                                                                vibrateSelection();
+                                                                                Navigator.of(context).pop();
+                                                                              },
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                );
+                                                              },
+                                                              child: Container(
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  border: Border
+                                                                      .all(
+                                                                    color: Theme.of(
+                                                                            context)
+                                                                        .colorScheme
+                                                                        .primary,
+                                                                    width: 1.0,
+                                                                  ),
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8.0),
+                                                                ),
+                                                                child:
+                                                                    ClipRRect(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              7.0),
+                                                                  child: Image
+                                                                      .network(
+                                                                    file.url,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    height: 150,
+                                                                    width: 150,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            );
+                                                          }
+                                                        },
+                                                      );
+                                                    }).toList(),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                           leading: GestureDetector(
                                             onTap: () {
