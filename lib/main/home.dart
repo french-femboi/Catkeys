@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:catkeys/main/settings.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -394,10 +396,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-            systemOverlayStyle: const SystemUiOverlayStyle(
-    statusBarIconBrightness: Brightness.light, // Light icons on dark background
-    statusBarColor: Colors.transparent, // Make status bar transparent
-  ),
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarIconBrightness:
+                Brightness.light, // Light icons on dark background
+            statusBarColor: Colors.transparent, // Make status bar transparent
+          ),
           backgroundColor:
               Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Text(
@@ -608,23 +611,122 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                   .primary,
                                             ),
                                           ),
-                                          subtitle: MarkdownBody(
-                                            data: note.text ??
-                                                note.renote?.text ??
-                                                'No content available',
-                                            styleSheet: MarkdownStyleSheet(
-                                              p: const TextStyle(
-                                                color: Colors
-                                                    .white, // You can style text here
-                                              ),
-                                            ),
-                                            onTapLink: (text, url, title) {
-                                              if (url != null) {
-                                                vibrateSelection();
-                                                openLink(
-                                                    url); // Open the link using the url_launcher package
-                                              }
-                                            },
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              if (note.text != null ||
+                                                  note.renote?.text != null)
+                                                MarkdownBody(
+                                                  data: note.text ??
+                                                      note.renote?.text ??
+                                                      'No content available',
+                                                  styleSheet:
+                                                      MarkdownStyleSheet(
+                                                    p: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  onTapLink:
+                                                      (text, url, title) {
+                                                    if (url != null) {
+                                                      vibrateSelection();
+                                                      openLink(url);
+                                                    }
+                                                  },
+                                                ),
+                                              if (note.files != null &&
+                                                  note.files!.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 8.0),
+                                                  child: Wrap(
+                                                    spacing: 8.0,
+                                                    runSpacing: 8.0,
+                                                    children:
+                                                        note.files!.map((file) {
+                                                      return GestureDetector(
+                                                        onTap: () {
+                                                          vibrateSelection();
+                                                          showDialog(
+                                                            context: context,
+                                                            builder:
+                                                                (BuildContext
+                                                                    context) {
+                                                              return Material(
+                                                                color: Colors
+                                                                    .transparent, // Transparent background
+                                                                child: Stack(
+                                                                  children: [
+                                                                    BackdropFilter(
+                                                                      filter: ImageFilter.blur(
+                                                                          sigmaX:
+                                                                              10,
+                                                                          sigmaY:
+                                                                              10),
+                                                                      child:
+                                                                          Container(
+                                                                        width: MediaQuery.of(context)
+                                                                            .size
+                                                                            .width,
+                                                                        height: MediaQuery.of(context)
+                                                                            .size
+                                                                            .height,
+                                                                      ),
+                                                                    ),
+                                                                    // Full-screen image
+                                                                    InteractiveViewer(
+                                                                      minScale:
+                                                                          0.8,
+                                                                      maxScale:
+                                                                          4.0,
+                                                                      child:
+                                                                          Center(
+                                                                        child: Image
+                                                                            .network(
+                                                                          file.url,
+                                                                          fit: BoxFit
+                                                                              .contain,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    // Fixed close button
+                                                                    Positioned(
+                                                                      top: 16,
+                                                                      left: 16,
+                                                                      child:
+                                                                          IconButton(
+                                                                        icon: const Icon(
+                                                                            Icons
+                                                                                .close,
+                                                                            color:
+                                                                                Colors.white),
+                                                                        onPressed:
+                                                                            () {
+                                                                          vibrateSelection();
+                                                                          Navigator.of(context)
+                                                                              .pop();
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            },
+                                                          );
+                                                        },
+                                                        child: Image.network(
+                                                          file.url,
+                                                          height: 150,
+                                                          width: 150,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                           leading: GestureDetector(
                                             onTap: () {
@@ -804,7 +906,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               },
                             ),
                             // Tab 2 content
-                            FutureBuilder<List<Note>>(
+FutureBuilder<List<Note>>(
                               future: fetchNotesLocal(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
@@ -837,23 +939,122 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                   .primary,
                                             ),
                                           ),
-                                          subtitle: MarkdownBody(
-                                            data: note.text ??
-                                                note.renote?.text ??
-                                                'No content available',
-                                            styleSheet: MarkdownStyleSheet(
-                                              p: const TextStyle(
-                                                color: Colors
-                                                    .white, // You can style text here
-                                              ),
-                                            ),
-                                            onTapLink: (text, url, title) {
-                                              if (url != null) {
-                                                vibrateSelection();
-                                                openLink(
-                                                    url); // Open the link using the url_launcher package
-                                              }
-                                            },
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              if (note.text != null ||
+                                                  note.renote?.text != null)
+                                                MarkdownBody(
+                                                  data: note.text ??
+                                                      note.renote?.text ??
+                                                      'No content available',
+                                                  styleSheet:
+                                                      MarkdownStyleSheet(
+                                                    p: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  onTapLink:
+                                                      (text, url, title) {
+                                                    if (url != null) {
+                                                      vibrateSelection();
+                                                      openLink(url);
+                                                    }
+                                                  },
+                                                ),
+                                              if (note.files != null &&
+                                                  note.files!.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 8.0),
+                                                  child: Wrap(
+                                                    spacing: 8.0,
+                                                    runSpacing: 8.0,
+                                                    children:
+                                                        note.files!.map((file) {
+                                                      return GestureDetector(
+                                                        onTap: () {
+                                                          vibrateSelection();
+                                                          showDialog(
+                                                            context: context,
+                                                            builder:
+                                                                (BuildContext
+                                                                    context) {
+                                                              return Material(
+                                                                color: Colors
+                                                                    .transparent, // Transparent background
+                                                                child: Stack(
+                                                                  children: [
+                                                                    BackdropFilter(
+                                                                      filter: ImageFilter.blur(
+                                                                          sigmaX:
+                                                                              10,
+                                                                          sigmaY:
+                                                                              10),
+                                                                      child:
+                                                                          Container(
+                                                                        width: MediaQuery.of(context)
+                                                                            .size
+                                                                            .width,
+                                                                        height: MediaQuery.of(context)
+                                                                            .size
+                                                                            .height,
+                                                                      ),
+                                                                    ),
+                                                                    // Full-screen image
+                                                                    InteractiveViewer(
+                                                                      minScale:
+                                                                          0.8,
+                                                                      maxScale:
+                                                                          4.0,
+                                                                      child:
+                                                                          Center(
+                                                                        child: Image
+                                                                            .network(
+                                                                          file.url,
+                                                                          fit: BoxFit
+                                                                              .contain,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    // Fixed close button
+                                                                    Positioned(
+                                                                      top: 16,
+                                                                      left: 16,
+                                                                      child:
+                                                                          IconButton(
+                                                                        icon: const Icon(
+                                                                            Icons
+                                                                                .close,
+                                                                            color:
+                                                                                Colors.white),
+                                                                        onPressed:
+                                                                            () {
+                                                                          vibrateSelection();
+                                                                          Navigator.of(context)
+                                                                              .pop();
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            },
+                                                          );
+                                                        },
+                                                        child: Image.network(
+                                                          file.url,
+                                                          height: 150,
+                                                          width: 150,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                           leading: GestureDetector(
                                             onTap: () {
@@ -1032,7 +1233,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 );
                               },
                             ),
-                            // Tab 3 content
+
                             FutureBuilder<List<Note>>(
                               future: fetchNotesGlobal(),
                               builder: (context, snapshot) {
@@ -1066,23 +1267,122 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                   .primary,
                                             ),
                                           ),
-                                          subtitle: MarkdownBody(
-                                            data: note.text ??
-                                                note.renote?.text ??
-                                                'No content available',
-                                            styleSheet: MarkdownStyleSheet(
-                                              p: const TextStyle(
-                                                color: Colors
-                                                    .white, // You can style text here
-                                              ),
-                                            ),
-                                            onTapLink: (text, url, title) {
-                                              if (url != null) {
-                                                vibrateSelection();
-                                                openLink(
-                                                    url); // Open the link using the url_launcher package
-                                              }
-                                            },
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              if (note.text != null ||
+                                                  note.renote?.text != null)
+                                                MarkdownBody(
+                                                  data: note.text ??
+                                                      note.renote?.text ??
+                                                      'No content available',
+                                                  styleSheet:
+                                                      MarkdownStyleSheet(
+                                                    p: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  onTapLink:
+                                                      (text, url, title) {
+                                                    if (url != null) {
+                                                      vibrateSelection();
+                                                      openLink(url);
+                                                    }
+                                                  },
+                                                ),
+                                              if (note.files != null &&
+                                                  note.files!.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 8.0),
+                                                  child: Wrap(
+                                                    spacing: 8.0,
+                                                    runSpacing: 8.0,
+                                                    children:
+                                                        note.files!.map((file) {
+                                                      return GestureDetector(
+                                                        onTap: () {
+                                                          vibrateSelection();
+                                                          showDialog(
+                                                            context: context,
+                                                            builder:
+                                                                (BuildContext
+                                                                    context) {
+                                                              return Material(
+                                                                color: Colors
+                                                                    .transparent, // Transparent background
+                                                                child: Stack(
+                                                                  children: [
+                                                                    BackdropFilter(
+                                                                      filter: ImageFilter.blur(
+                                                                          sigmaX:
+                                                                              10,
+                                                                          sigmaY:
+                                                                              10),
+                                                                      child:
+                                                                          Container(
+                                                                        width: MediaQuery.of(context)
+                                                                            .size
+                                                                            .width,
+                                                                        height: MediaQuery.of(context)
+                                                                            .size
+                                                                            .height,
+                                                                      ),
+                                                                    ),
+                                                                    // Full-screen image
+                                                                    InteractiveViewer(
+                                                                      minScale:
+                                                                          0.8,
+                                                                      maxScale:
+                                                                          4.0,
+                                                                      child:
+                                                                          Center(
+                                                                        child: Image
+                                                                            .network(
+                                                                          file.url,
+                                                                          fit: BoxFit
+                                                                              .contain,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    // Fixed close button
+                                                                    Positioned(
+                                                                      top: 16,
+                                                                      left: 16,
+                                                                      child:
+                                                                          IconButton(
+                                                                        icon: const Icon(
+                                                                            Icons
+                                                                                .close,
+                                                                            color:
+                                                                                Colors.white),
+                                                                        onPressed:
+                                                                            () {
+                                                                          vibrateSelection();
+                                                                          Navigator.of(context)
+                                                                              .pop();
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            },
+                                                          );
+                                                        },
+                                                        child: Image.network(
+                                                          file.url,
+                                                          height: 150,
+                                                          width: 150,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                           leading: GestureDetector(
                                             onTap: () {
