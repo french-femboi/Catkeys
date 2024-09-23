@@ -311,24 +311,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  Future<List<Notification>> fetchNotifications() async {
-    try {
-      final response = await client.i.notifications(
-        INotificationsRequest(
-          limit: posts, // Adjust the limit if needed
-        ),
-      );
+Future<List<Notification>> fetchNotifications() async {
+  try {
+    final response = await client.i.notifications(
+      INotificationsRequest(
+        limit: posts, // Adjust the limit if needed
+      ),
+    );
 
-      // Convert the response to a List<Notification>
-      List<Notification> notifications = response.map((item) {
-        return Notification.fromResponse(item);
-      }).toList();
-
-      return notifications;
-    } catch (e) {
-      return []; // Return an empty list on error
-    }
+    // Assuming you have a method to convert INotificationsResponse to Notification
+    return response.map((notifResponse) => convertToNotification(notifResponse)).toList();
+  } catch (e) {
+    return []; // Return an empty list on error
   }
+}
+
+// Example conversion method (You need to define it according to your classes)
+Notification convertToNotification(INotificationsResponse notifResponse) {
+  return Notification(
+    title: notifResponse.header ?? 'none', 
+    body: notifResponse.body ?? 'none',
+  );
+}
+
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -1075,13 +1080,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 final notification = notifications[index];
                                 return Column(
                                   children: [
-                                    ListTile(
-                                      title: Text(notification.title ??
-                                          'No Title'), // Adjust according to notification fields
-                                      subtitle: Text(
-                                          notification.body ?? 'No Content'),
-                                    ),
-                                    const Divider(), // Add a divider after each ListTile
+                                  ListTile(
+                                    title: Text(notification.title.isNotEmpty
+                                      ? notification.title
+                                      : 'No Title'), // Adjust according to notification fields
+                                    subtitle: Text(notification.body.isNotEmpty
+                                      ? notification.body
+                                      : 'No Content'),
+                                  ),
+                                  const Divider(), // Add a divider after each ListTile
                                   ],
                                 );
                               },
