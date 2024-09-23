@@ -102,6 +102,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String userID = '';
   int _selectedChip = 1;
   int posts = 250;
+  int tabIndex = 0;
   final TextEditingController _noteController = TextEditingController();
   late final TabController tabs1 = TabController(length: 3, vsync: this);
 
@@ -127,6 +128,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     fetchData();
 
     tabs1.addListener(() {
+      setState(() {
+        tabIndex = tabs1.index;
+      });
       vibrateSelection();
     });
 
@@ -587,12 +591,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             kToolbarHeight - // Subtract the app bar height
                             kBottomNavigationBarHeight -
                             110, // Subtract the bottom nav bar height
-                        child: TabBarView(
-                          controller: tabs1,
-                          children: [
                             // Tab 1 content
-                            FutureBuilder<List<Note>>(
-                              future: fetchNotesHome(),
+                            child: FutureBuilder<List<Note>>(
+                                future: tabIndex == 0
+                                  ? fetchNotesHome()
+                                  : tabIndex == 1
+                                  ? fetchNotesLocal()
+                                  : tabIndex == 2
+                                    ? fetchNotesGlobal()
+                                    : Future.value([]),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
@@ -1025,24 +1032,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               },
                             ),
 
-                            Container(
-                              padding: const EdgeInsets.all(16.0),
-                              child: const Text(
-                                'This is a new container with text.',
-                                style: TextStyle(fontSize: 16.0),
-                              ),
-                            ),
-
-                            Container(
-                              padding: const EdgeInsets.all(16.0),
-                              child: const Text(
-                                'This is a new container with text.',
-                                style: TextStyle(fontSize: 16.0),
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
                     ],
                   ),
                 ),
