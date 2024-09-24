@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:catkeys/pre/setup.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +22,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: Theme.of(context).colorScheme.surface, // Change to your desired color
+      systemNavigationBarIconBrightness: Brightness.light, // Icons color
+    ));
+
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return MaterialApp(
@@ -57,6 +64,22 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     initializeWindow(context);
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      setNavigationBarColor();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setNavigationBarColor();
+  }
+
+  void setNavigationBarColor() {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: Theme.of(context).colorScheme.surface,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
   }
 
   Future<void> initializeWindow(BuildContext context) async {
@@ -108,11 +131,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              Image.asset(
-                'assets/img/logo.png',
-                width: 100,
-                height: 100,
+              Icon(
+                Icons.groups_rounded,
+                size: 100,
+                color: Theme.of(context).colorScheme.primary,
               ),
+              const SizedBox(height: 6),
             Text(
               'Catkeys',
               style: TextStyle(

@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -85,6 +86,26 @@ class Notification {
   }
 }
 
+class DriveItem {
+  final String id;
+  final String name;
+  final int size;
+
+  DriveItem({
+    required this.id,
+    required this.name,
+    required this.size,
+  });
+
+  factory DriveItem.fromJson(Map<String, dynamic> json) {
+    return DriveItem(
+      id: json['id'],
+      name: json['name'],
+      size: json['size'],
+    );
+  }
+}
+
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late Misskey client;
   String url = '';
@@ -143,6 +164,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       systemNavigationBarIconBrightness:
           Brightness.light, // Light icons on navigation bar
     ));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   lookupAccount() async {
@@ -213,9 +239,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       : null,
         ),
       );
-    } catch (e) {
-      print('Error creating note: $e');
-    }
+    } catch (e) {}
     _noteController.text = '';
     _selectedChip = 0;
   }
@@ -272,6 +296,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  Future<List<DriveFile>> fetchDriveItems() async {
+    try {
+      final response = await client.drive.files.files(
+        DriveFilesRequest(
+          limit: posts,
+        ),
+      );
+      // No need to map to a separate model; we can use DriveFile directly
+      return response.toList();
+    } catch (e) {
+      print('Error: $e');
+      return []; // Return an empty list on error
+    }
+  }
+
   Future<List<Note>> fetchNotesHome() async {
     try {
       final response = await client.notes.homeTimeline(
@@ -311,29 +350,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-Future<List<Notification>> fetchNotifications() async {
-  try {
-    final response = await client.i.notifications(
-      INotificationsRequest(
-        limit: posts, // Adjust the limit if needed
-      ),
-    );
+  Future<List<INotificationsResponse>> fetchNotifications() async {
+    try {
+      final response = await client.i.notifications(
+        INotificationsRequest(
+          limit: posts, // Adjust the limit if needed
+        ),
+      );
 
-    // Assuming you have a method to convert INotificationsResponse to Notification
-    return response.map((notifResponse) => convertToNotification(notifResponse)).toList();
-  } catch (e) {
-    return []; // Return an empty list on error
+      // Print the response for debugging
+      print('-------------------------- Notifications --------------------------');
+      print('API Response: $response');
+      print('-------------------------- Notifications --------------------------');
+
+      // No need to map to a separate model; we can use DriveFile directly
+      return response.toList();
+    } catch (e) {
+      print('Error: $e');
+      return []; // Return an empty list on error
+    }
   }
-}
 
 // Example conversion method (You need to define it according to your classes)
-Notification convertToNotification(INotificationsResponse notifResponse) {
-  return Notification(
-    title: notifResponse.header ?? 'none', 
-    body: notifResponse.body ?? 'none',
-  );
-}
-
+  Notification convertToNotification(INotificationsResponse notifResponse) {
+    return Notification(
+      title: notifResponse.header ?? 'none',
+      body: notifResponse.body ?? 'none',
+    );
+  }
 
   clearData() {
     SharedPreferences.getInstance().then((prefs) {
@@ -596,229 +640,118 @@ Notification convertToNotification(INotificationsResponse notifResponse) {
                             kToolbarHeight - // Subtract the app bar height
                             kBottomNavigationBarHeight -
                             110, // Subtract the bottom nav bar height
-                            // Tab 1 content
-                            child: FutureBuilder<List<Note>>(
-                                future: tabIndex == 0
-                                  ? fetchNotesHome()
-                                  : tabIndex == 1
+                        // Tab 1 content
+                        child: FutureBuilder<List<Note>>(
+                          future: tabIndex == 0
+                              ? fetchNotesHome()
+                              : tabIndex == 1
                                   ? fetchNotesLocal()
                                   : tabIndex == 2
-                                    ? fetchNotesGlobal()
-                                    : Future.value([]),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Center(
-                                      child: CircularProgressIndicator());
-                                } else if (snapshot.hasError) {
-                                  return Center(
-                                      child: Text('Error: ${snapshot.error}'));
-                                } else if (!snapshot.hasData ||
-                                    snapshot.data!.isEmpty) {
-                                  return const Center(
-                                      child: Text('No data available'));
-                                }
-                                return ListView.builder(
-                                  physics:
-                                      const AlwaysScrollableScrollPhysics(),
-                                  itemCount: snapshot.data!.length,
-                                  itemBuilder: (context, index) {
-                                    final note = snapshot.data![index];
-                                    return Column(
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            note.user.name ?? 'Unknown user',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                            ),
-                                          ),
-                                          subtitle: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              if (note.text != null ||
-                                                  note.renote?.text != null)
-                                                MarkdownBody(
-                                                  data: note.text ??
-                                                      note.renote?.text ??
-                                                      'No content available',
-                                                  styleSheet:
-                                                      MarkdownStyleSheet(
-                                                    p: const TextStyle(
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                  onTapLink:
-                                                      (text, url, title) {
-                                                    if (url != null) {
-                                                      vibrateSelection();
-                                                      openLink(url);
-                                                    }
-                                                  },
+                                      ? fetchNotesGlobal()
+                                      : Future.value([]),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            } else if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) {
+                              return const Center(
+                                  child: Text('No data available'));
+                            }
+                            return ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                final note = snapshot.data![index];
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      title: Text(
+                                        note.user.name ?? 'Unknown user',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (note.text != null ||
+                                              note.renote?.text != null)
+                                            MarkdownBody(
+                                              data: note.text ??
+                                                  note.renote?.text ??
+                                                  'No content available',
+                                              styleSheet: MarkdownStyleSheet(
+                                                p: const TextStyle(
+                                                  color: Colors.white,
                                                 ),
-                                              if (note.files != null &&
-                                                  note.files!.isNotEmpty)
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 8.0),
-                                                  child: Wrap(
-                                                    spacing: 8.0,
-                                                    runSpacing: 8.0,
-                                                    children:
-                                                        note.files!.map((file) {
-                                                      return FutureBuilder<
-                                                          bool>(
-                                                        future: isVideoFile(file
-                                                            .url), // Check if it's a video
-                                                        builder: (context,
-                                                            snapshot) {
-                                                          if (snapshot
-                                                                  .connectionState ==
-                                                              ConnectionState
-                                                                  .waiting) {
-                                                            return const CircularProgressIndicator();
-                                                          } else if (snapshot
-                                                              .hasError) {
-                                                            return const Icon(
-                                                                Icons.error);
-                                                          } else if (snapshot
-                                                                  .hasData &&
-                                                              snapshot.data!) {
-                                                            // It's a video, display video-related UI
-                                                            return GestureDetector(
-                                                              onTap: () {
-                                                                vibrateSelection(); // Trigger vibration on video tap
-                                                                Navigator.push(
-                                                                  context,
-                                                                  MaterialPageRoute(
-                                                                    builder: (context) =>
-                                                                        VideoPlayerPage(
-                                                                            videoUrl:
-                                                                                file.url),
-                                                                  ),
-                                                                );
-                                                              },
-                                                              child: Stack(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .center,
-                                                                children: [
-                                                                  Container(
-                                                                    padding: const EdgeInsets
+                                              ),
+                                              onTapLink: (text, url, title) {
+                                                if (url != null) {
+                                                  vibrateSelection();
+                                                  openLink(url);
+                                                }
+                                              },
+                                            ),
+                                          if (note.files != null &&
+                                              note.files!.isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 8.0),
+                                              child: Wrap(
+                                                spacing: 8.0,
+                                                runSpacing: 8.0,
+                                                children:
+                                                    note.files!.map((file) {
+                                                  return FutureBuilder<bool>(
+                                                    future: isVideoFile(file
+                                                        .url), // Check if it's a video
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return const CircularProgressIndicator();
+                                                      } else if (snapshot
+                                                          .hasError) {
+                                                        return const Icon(
+                                                            Icons.error);
+                                                      } else if (snapshot
+                                                              .hasData &&
+                                                          snapshot.data!) {
+                                                        // It's a video, display video-related UI
+                                                        return GestureDetector(
+                                                          onTap: () {
+                                                            vibrateSelection(); // Trigger vibration on video tap
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder: (context) =>
+                                                                    VideoPlayerPage(
+                                                                        videoUrl:
+                                                                            file.url),
+                                                              ),
+                                                            );
+                                                          },
+                                                          child: Stack(
+                                                            alignment: Alignment
+                                                                .center,
+                                                            children: [
+                                                              Container(
+                                                                padding:
+                                                                    const EdgeInsets
                                                                         .only(
                                                                         right:
                                                                             3.0),
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      border:
-                                                                          Border
-                                                                              .all(
-                                                                        color: Theme.of(context)
-                                                                            .colorScheme
-                                                                            .primary,
-                                                                        width:
-                                                                            1.0,
-                                                                      ),
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              4.0),
-                                                                    ),
-                                                                    child: Row(
-                                                                      children: [
-                                                                        Icon(
-                                                                          Icons
-                                                                              .movie_rounded,
-                                                                          color: Theme.of(context)
-                                                                              .colorScheme
-                                                                              .primary,
-                                                                        ),
-                                                                        Text(
-                                                                          'Click to open attached video',
-                                                                          style:
-                                                                              TextStyle(
-                                                                            fontSize:
-                                                                                12,
-                                                                            color:
-                                                                                Theme.of(context).colorScheme.primary,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                          ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            );
-                                                          } else {
-                                                            // It's an image, display the image and open lightbox on tap
-                                                            return GestureDetector(
-                                                              onTap: () {
-                                                                vibrateSelection(); // Trigger vibration on image tap
-
-                                                                // Open lightbox for image
-                                                                showDialog(
-                                                                  context:
-                                                                      context,
-                                                                  builder:
-                                                                      (BuildContext
-                                                                          context) {
-                                                                    return Material(
-                                                                      color: Colors
-                                                                          .transparent,
-                                                                      child:
-                                                                          Stack(
-                                                                        children: [
-                                                                          BackdropFilter(
-                                                                            filter:
-                                                                                ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                                                            child:
-                                                                                Container(
-                                                                              width: MediaQuery.of(context).size.width,
-                                                                              height: MediaQuery.of(context).size.height,
-                                                                            ),
-                                                                          ),
-                                                                          // Full-screen image
-                                                                          InteractiveViewer(
-                                                                            minScale:
-                                                                                0.8,
-                                                                            maxScale:
-                                                                                4.0,
-                                                                            child:
-                                                                                Center(
-                                                                              child: Image.network(
-                                                                                file.url,
-                                                                                fit: BoxFit.contain,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                          // Close button
-                                                                          Positioned(
-                                                                            top:
-                                                                                16,
-                                                                            left:
-                                                                                16,
-                                                                            child:
-                                                                                IconButton(
-                                                                              icon: const Icon(Icons.close, color: Colors.white),
-                                                                              onPressed: () {
-                                                                                vibrateSelection();
-                                                                                Navigator.of(context).pop();
-                                                                              },
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                                );
-                                                              },
-                                                              child: Container(
                                                                 decoration:
                                                                     BoxDecoration(
                                                                   border: Border
@@ -832,212 +765,318 @@ Notification convertToNotification(INotificationsResponse notifResponse) {
                                                                   borderRadius:
                                                                       BorderRadius
                                                                           .circular(
-                                                                              8.0),
+                                                                              4.0),
                                                                 ),
-                                                                child:
-                                                                    ClipRRect(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              7.0),
-                                                                  child: Image
-                                                                      .network(
-                                                                    file.url,
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                    height: 150,
-                                                                    width: 150,
-                                                                  ),
+                                                                child: Row(
+                                                                  children: [
+                                                                    Icon(
+                                                                      Icons
+                                                                          .movie_rounded,
+                                                                      color: Theme.of(
+                                                                              context)
+                                                                          .colorScheme
+                                                                          .primary,
+                                                                    ),
+                                                                    Text(
+                                                                      'Click to open attached video',
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            12,
+                                                                        color: Theme.of(context)
+                                                                            .colorScheme
+                                                                            .primary,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                      ),
+                                                                    ),
+                                                                  ],
                                                                 ),
                                                               ),
+                                                            ],
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        // It's an image, display the image and open lightbox on tap
+                                                        return GestureDetector(
+                                                          onTap: () {
+                                                            vibrateSelection(); // Trigger vibration on image tap
+
+                                                            // Open lightbox for image
+                                                            showDialog(
+                                                              context: context,
+                                                              builder:
+                                                                  (BuildContext
+                                                                      context) {
+                                                                return Material(
+                                                                  color: Colors
+                                                                      .transparent,
+                                                                  child: Stack(
+                                                                    children: [
+                                                                      BackdropFilter(
+                                                                        filter: ImageFilter.blur(
+                                                                            sigmaX:
+                                                                                10,
+                                                                            sigmaY:
+                                                                                10),
+                                                                        child:
+                                                                            Container(
+                                                                          width: MediaQuery.of(context)
+                                                                              .size
+                                                                              .width,
+                                                                          height: MediaQuery.of(context)
+                                                                              .size
+                                                                              .height,
+                                                                        ),
+                                                                      ),
+                                                                      // Full-screen image
+                                                                      InteractiveViewer(
+                                                                        minScale:
+                                                                            0.8,
+                                                                        maxScale:
+                                                                            4.0,
+                                                                        child:
+                                                                            Center(
+                                                                          child:
+                                                                              Image.network(
+                                                                            file.url,
+                                                                            fit:
+                                                                                BoxFit.contain,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      // Close button
+                                                                      Positioned(
+                                                                        top: 16,
+                                                                        left:
+                                                                            16,
+                                                                        child:
+                                                                            IconButton(
+                                                                          icon: const Icon(
+                                                                              Icons.close,
+                                                                              color: Colors.white),
+                                                                          onPressed:
+                                                                              () {
+                                                                            vibrateSelection();
+                                                                            Navigator.of(context).pop();
+                                                                          },
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                              },
                                                             );
-                                                          }
-                                                        },
-                                                      );
-                                                    }).toList(),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                          leading: GestureDetector(
-                                            onTap: () {
-                                              vibrateSelection();
-                                              navProfile(note.userId);
-                                            },
-                                            child: CircleAvatar(
-                                              backgroundImage: NetworkImage(note
-                                                  .user.avatarUrl
-                                                  .toString()),
-                                            ),
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.repeat_rounded,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .secondary, // Change the color to red
-                                              ),
-                                              onPressed: () {
-                                                vibrateSelection();
-                                                repostNote(note.id);
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.open_in_browser_rounded,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .secondary, // Change the color to red
-                                              ),
-                                              onPressed: () async {
-                                                vibrateSelection();
-                                                openLink(
-                                                    'https://$url/notes/${note.id}');
-                                              },
-                                            ),
-                                            if (note.user.username ==
-                                                userHandle)
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.delete_rounded,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .secondary, // Change the color to red
-                                                ),
-                                                onPressed: () {
-                                                  vibrateSelection();
-                                                  showDialog(
-                                                    context: context,
-                                                    builder:
-                                                        (BuildContext context) {
-                                                      return AlertDialog(
-                                                        title: const Text(
-                                                            'Deleting Note'),
-                                                        content: const Text(
-                                                            "Are you sure you want to delete this note? This action can't be undone."),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
-                                                              vibrateSelection();
-                                                            },
-                                                            child: const Text(
-                                                                'Cancel'),
+                                                          },
+                                                          child: Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              border:
+                                                                  Border.all(
+                                                                color: Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary,
+                                                                width: 1.0,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                            ),
+                                                            child: ClipRRect(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          7.0),
+                                                              child:
+                                                                  Image.network(
+                                                                file.url,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                                height: 150,
+                                                                width: 150,
+                                                              ),
+                                                            ),
                                                           ),
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              deleteNote(
-                                                                  note.id);
-                                                              vibrateSelection();
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
-                                                              refreshNotesD();
-                                                            },
-                                                            child: const Text(
-                                                                'Confirm'),
-                                                          ),
-                                                        ],
-                                                      );
+                                                        );
+                                                      }
                                                     },
                                                   );
-                                                },
+                                                }).toList(),
                                               ),
-                                            if (note.renoteId != null) ...[
-                                              Container(
-                                                padding: const EdgeInsets.only(
-                                                    right:
-                                                        3.0), // Add padding only on the right side
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary,
-                                                    width: 1.0,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          4.0),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.restart_alt_rounded,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary,
-                                                    ),
-                                                    Text(
-                                                      'Renote',
-                                                      style: TextStyle(
-                                                          fontSize: 12,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                            if (note.visibility ==
-                                                NoteVisibility.followers) ...[
-                                              Container(
-                                                padding: const EdgeInsets.only(
-                                                    right:
-                                                        3.0), // Add padding only on the right side
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary,
-                                                    width: 1.0,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          4.0),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.lock_rounded,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary,
-                                                    ),
-                                                    Text(
-                                                      'Followers only',
-                                                      style: TextStyle(
-                                                          fontSize: 12,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ],
+                                            ),
+                                        ],
+                                      ),
+                                      leading: GestureDetector(
+                                        onTap: () {
+                                          vibrateSelection();
+                                          navProfile(note.userId);
+                                        },
+                                        child: CircleAvatar(
+                                          backgroundImage: NetworkImage(
+                                              note.user.avatarUrl.toString()),
                                         ),
-                                        const Divider(),
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.repeat_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary, // Change the color to red
+                                          ),
+                                          onPressed: () {
+                                            vibrateSelection();
+                                            repostNote(note.id);
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.open_in_browser_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary, // Change the color to red
+                                          ),
+                                          onPressed: () async {
+                                            vibrateSelection();
+                                            openLink(
+                                                'https://$url/notes/${note.id}');
+                                          },
+                                        ),
+                                        if (note.user.username == userHandle)
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.delete_rounded,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary, // Change the color to red
+                                            ),
+                                            onPressed: () {
+                                              vibrateSelection();
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title: const Text(
+                                                        'Deleting Note'),
+                                                    content: const Text(
+                                                        "Are you sure you want to delete this note? This action can't be undone."),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          vibrateSelection();
+                                                        },
+                                                        child: const Text(
+                                                            'Cancel'),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          deleteNote(note.id);
+                                                          vibrateSelection();
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          refreshNotesD();
+                                                        },
+                                                        child: const Text(
+                                                            'Confirm'),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        if (note.renoteId != null) ...[
+                                          Container(
+                                            padding: const EdgeInsets.only(
+                                                right:
+                                                    3.0), // Add padding only on the right side
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                width: 1.0,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.restart_alt_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                                Text(
+                                                  'Renote',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                        if (note.visibility ==
+                                            NoteVisibility.followers) ...[
+                                          Container(
+                                            padding: const EdgeInsets.only(
+                                                right:
+                                                    3.0), // Add padding only on the right side
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                width: 1.0,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.lock_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                                Text(
+                                                  'Followers only',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ],
-                                    );
-                                  },
+                                    ),
+                                    const Divider(),
+                                  ],
                                 );
                               },
-                            ),
-
+                            );
+                          },
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -1045,66 +1084,98 @@ Notification convertToNotification(INotificationsResponse notifResponse) {
               Visibility(
                 visible: currentPageIndex == 1,
                 maintainState: true,
-                child: Column(
-                  mainAxisSize: MainAxisSize
-                      .min, // This ensures the Column only takes the space it needs
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height -
-                          kToolbarHeight - // Subtract the app bar height
-                          kBottomNavigationBarHeight -
-                          63, // Subtract the bottom nav bar height/ Allows children to shrink-wrap rather than expanding infinitely
-                      child: FutureBuilder<List<Notification>>(
-                        future: fetchNotifications(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child:
-                                    CircularProgressIndicator()); // Loading spinner while fetching
-                          } else if (snapshot.hasError) {
-                            return Center(
-                                child: Text(
-                                    'Error: ${snapshot.error}')); // Error message
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return const Center(
-                                child: Text(
-                                    'No notifications available.')); // Empty list message
-                          } else {
-                            // If the data is ready and not empty
-                            final notifications = snapshot.data!;
-                            return ListView.builder(
-                              itemCount: notifications.length,
-                              itemBuilder: (context, index) {
-                                final notification = notifications[index];
-                                return Column(
-                                  children: [
-                                  ListTile(
-                                    title: Text(notification.title.isNotEmpty
-                                      ? notification.title
-                                      : 'No Title'), // Adjust according to notification fields
-                                    subtitle: Text(notification.body.isNotEmpty
-                                      ? notification.body
-                                      : 'No Content'),
-                                  ),
-                                  const Divider(), // Add a divider after each ListTile
-                                  ],
-                                );
-                              },
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height -
+                      kToolbarHeight - // Subtract the app bar height
+                      kBottomNavigationBarHeight -
+                      65, // Subtract the bottom nav bar height
+                  child: FutureBuilder<List<INotificationsResponse>>(
+                    future: fetchNotifications(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                            child: Text('No notifications available.'));
+                      } else {
+                        final driveItems = snapshot.data!;
+                        return ListView.builder(
+                          shrinkWrap:
+                              true, // Enable shrinkWrap to prevent unbounded height
+                          itemCount: driveItems.length,
+                          itemBuilder: (context, index) {
+                            final driveItem = driveItems[index];
+                            return Column(
+                              children: [
+                                ListTile(
+                                  leading:
+                                      const Icon(Icons.notifications_rounded),
+                                  title: Text(driveItem.header ?? 'No title'),
+                                  subtitle:
+                                      Text(driveItem.body ?? 'No content'),
+                                  onTap: () {
+                                    vibrateError();
+                                  },
+                                ),
+                                const Divider(),
+                              ],
                             );
-                          }
-                        },
-                      ),
-                    ),
-                  ],
+                          },
+                        );
+                      }
+                    },
+                  ),
                 ),
               ),
               Visibility(
                 visible: currentPageIndex == 2,
                 maintainState: true,
-                child: const Expanded(
-                  child: Text("meow THREE :3"),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height -
+                      kToolbarHeight - // Subtract the app bar height
+                      kBottomNavigationBarHeight -
+                      65, // Subtract the bottom nav bar height
+                  child: FutureBuilder<List<DriveFile>>(
+                    future: fetchDriveItems(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                            child: Text('No drive items available.'));
+                      } else {
+                        final driveItems = snapshot.data!;
+                        return ListView.builder(
+                          shrinkWrap:
+                              true, // Enable shrinkWrap to prevent unbounded height
+                          itemCount: driveItems.length,
+                          itemBuilder: (context, index) {
+                            final driveItem = driveItems[index];
+                            return Column(
+                              children: [
+                                ListTile(
+                                  leading: const Icon(
+                                      Icons.insert_drive_file_rounded),
+                                  title: Text(driveItem.name),
+                                  subtitle: Text(
+                                      '${(driveItem.size / (1024 * 1024)).toStringAsFixed(2)} MB'),
+                                  onTap: () {
+                                    vibrateSelection();
+                                    openLink(driveItem.url);
+                                  },
+                                ),
+                                const Divider(),
+                              ],
+                            );
+                          },
+                        );
+                      }
+                    },
+                  ),
                 ),
               ),
               Visibility(
@@ -1591,8 +1662,8 @@ Notification convertToNotification(INotificationsResponse notifResponse) {
                 label: 'Notifications',
               ),
               const NavigationDestination(
-                icon: Icon(Icons.search_rounded),
-                label: 'Search',
+                icon: Icon(Icons.cloud_rounded),
+                label: 'Drive',
               ),
               NavigationDestination(
                 selectedIcon: CircleAvatar(
