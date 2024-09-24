@@ -18,6 +18,7 @@ import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../pre/setup.dart';
 import 'profile.dart';
@@ -359,9 +360,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
 
       // Print the response for debugging
-      print('-------------------------- Notifications --------------------------');
+      print(
+          '-------------------------- Notifications --------------------------');
       print('API Response: $response');
-      print('-------------------------- Notifications --------------------------');
+      print(
+          '-------------------------- Notifications --------------------------');
 
       // No need to map to a separate model; we can use DriveFile directly
       return response.toList();
@@ -531,6 +534,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   vibrateSelection();
                   refreshNotesD();
                 } else if (value == 'Source Code') {
+                  vibrateSelection();
                   const url = 'https://github.com/french-femboi/Catkeys';
                   if (await canLaunch(url)) {
                     await launch(url);
@@ -1158,11 +1162,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             return Column(
                               children: [
                                 ListTile(
-                                  leading: const Icon(
-                                      Icons.insert_drive_file_rounded),
+                                  leading: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: driveItem.thumbnailUrl != null &&
+                                            driveItem.thumbnailUrl!.isNotEmpty
+                                        ? Image.network(
+                                            driveItem.thumbnailUrl!,
+                                            fit: BoxFit.cover,
+                                            width: 50,
+                                            height: 50,
+                                          )
+                                        : Icon(
+                                            Icons.insert_drive_file_rounded,
+                                            size: 50,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                  ),
                                   title: Text(driveItem.name),
                                   subtitle: Text(
-                                      '${(driveItem.size / (1024 * 1024)).toStringAsFixed(2)} MB'),
+                                      '${(driveItem.size / (1024 * 1024)).toStringAsFixed(2)} MB - ${DateFormat('dd/MM/yyyy – kk:mm').format(driveItem.createdAt)}'),
                                   onTap: () {
                                     vibrateSelection();
                                     openLink(driveItem.url);
