@@ -27,12 +27,15 @@ class Setup extends StatelessWidget {
           themeMode: ThemeMode.system, // Use device's color scheme
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: lightDynamic?.harmonized() ?? ColorScheme.fromSeed(seedColor: Colors.purple),
+            colorScheme: lightDynamic?.harmonized() ??
+                ColorScheme.fromSeed(seedColor: Colors.purple),
             fontFamily: 'Inter', // Set the font family to Inter
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
-            colorScheme: darkDynamic?.harmonized()  ?? ColorScheme.fromSeed(seedColor: Colors.purple, brightness: Brightness.dark),
+            colorScheme: darkDynamic?.harmonized() ??
+                ColorScheme.fromSeed(
+                    seedColor: Colors.purple, brightness: Brightness.dark),
             fontFamily: 'Inter',
           ),
           home: const SetupPage(title: 'Setup'),
@@ -100,32 +103,33 @@ class _SetupPageState extends State<SetupPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('catkeys_url', url);
     await prefs.setString('catkeys_token', token);
-    await prefs.setInt('catkeys_posts_shows', 250);
+    await prefs.setInt('catkeys_posts_shows', 100);
     await prefs.setBool('catkeys_haptics', true);
     navHome();
   }
 
   vibrateSelection() async {
-            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
-      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
-          Vibration.vibrate(duration: 50);
-      } else {
-          Vibration.vibrate();
-          await Future.delayed(Duration(milliseconds: 50));
-          Vibration.vibrate();
-      }
-    
+    final hasCustomVibrationsSupport =
+        await Vibration.hasCustomVibrationsSupport();
+    if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+      Vibration.vibrate(duration: 50);
+    } else {
+      Vibration.vibrate();
+      await Future.delayed(const Duration(milliseconds: 50));
+      Vibration.vibrate();
+    }
   }
 
   vibrateError() async {
-            final hasCustomVibrationsSupport = await Vibration.hasCustomVibrationsSupport();
-      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
-          Vibration.vibrate(duration: 200);
-      } else {
-          Vibration.vibrate();
-          await Future.delayed(Duration(milliseconds: 200));
-          Vibration.vibrate();
-      }
+    final hasCustomVibrationsSupport =
+        await Vibration.hasCustomVibrationsSupport();
+    if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+      Vibration.vibrate(duration: 200);
+    } else {
+      Vibration.vibrate();
+      await Future.delayed(const Duration(milliseconds: 200));
+      Vibration.vibrate();
+    }
   }
 
   @override
@@ -137,11 +141,13 @@ class _SetupPageState extends State<SetupPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-                      systemOverlayStyle: const SystemUiOverlayStyle(
-    statusBarIconBrightness: Brightness.light, // Light icons on dark background
-    statusBarColor: Colors.transparent, // Make status bar transparent
-  ),
-          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarIconBrightness:
+                Brightness.light, // Light icons on dark background
+            statusBarColor: Colors.transparent, // Make status bar transparent
+          ),
+          backgroundColor:
+              Theme.of(context).colorScheme.primary.withOpacity(0.1),
           title: Text(
             widget.title,
             style: TextStyle(
@@ -162,7 +168,7 @@ class _SetupPageState extends State<SetupPage> {
               children: [
                 const SizedBox(height: 25),
                 Text(
-                  'Welcome to Catkeys!',
+                  'Welcome to CatKeys!',
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.w900,
@@ -172,6 +178,7 @@ class _SetupPageState extends State<SetupPage> {
                 ),
                 const SizedBox(height: 16),
                 Card(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -182,13 +189,13 @@ class _SetupPageState extends State<SetupPage> {
                           Icons.info_rounded,
                           color: Theme.of(context).colorScheme.secondary,
                         ),
-                        SizedBox(width: 8),
-                        Expanded(
+                        const SizedBox(width: 8),
+                        const Expanded(
                           child: Text(
                             "Haii haii, I'm French Femboi and I made this Misskey client, because I didn't find any client that fit my needs. I am in no way related with Misskey!",
                             style: TextStyle(
                               fontSize: 16,
-                              color: Theme.of(context).colorScheme.secondary,
+                              color: Colors.white,
                               fontWeight: FontWeight.w500,
                             ),
                             textAlign: TextAlign.start,
@@ -200,6 +207,7 @@ class _SetupPageState extends State<SetupPage> {
                 ),
                 const SizedBox(height: 5),
                 Card(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -210,13 +218,13 @@ class _SetupPageState extends State<SetupPage> {
                           Icons.warning_rounded,
                           color: Theme.of(context).colorScheme.secondary,
                         ),
-                        SizedBox(width: 8),
-                        Expanded(
+                        const SizedBox(width: 8),
+                        const Expanded(
                           child: Text(
                             "Keep in mind this app connects you to a Misskey instance. I am not responsible for any content you may see or post.",
                             style: TextStyle(
                               fontSize: 16,
-                              color: Theme.of(context).colorScheme.secondary,
+                              color: Colors.white,
                               fontWeight: FontWeight.w500,
                             ),
                             textAlign: TextAlign.start,
@@ -236,8 +244,9 @@ class _SetupPageState extends State<SetupPage> {
                 ),
                 const SizedBox(height: 16),
                 Card(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -249,10 +258,10 @@ class _SetupPageState extends State<SetupPage> {
                             hintText: 'Enter the URL of your Misskey instance',
                           ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         TextField(
                           controller: _tokenController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: 'Token',
                             hintText: 'Enter your freshly generated API token',
                           ),
@@ -270,7 +279,7 @@ class _SetupPageState extends State<SetupPage> {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainer,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     minimumSize: const Size(double.infinity, 0),
                   ),

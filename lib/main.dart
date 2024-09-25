@@ -90,14 +90,14 @@ class _MyHomePageState extends State<MyHomePage> {
   navSetup() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SetupPage(title: 'Catkeys setup')),
+      MaterialPageRoute(builder: (context) => const SetupPage(title: 'CatKeys setup')),
     );
   }
 
   navHome() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const HomePage(title: 'Catkeys')),
+      MaterialPageRoute(builder: (context) => const HomePage(title: 'CatKeys')),
     );
   }
 
@@ -138,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               const SizedBox(height: 6),
             Text(
-              'Catkeys',
+              'CatKeys',
               style: TextStyle(
                 fontSize: 40,
                 fontWeight: FontWeight.w900,

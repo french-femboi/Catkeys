@@ -69,24 +69,6 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class Notification {
-  final String title; // Example property
-  final String body; // Example property
-
-  // Constructor
-  Notification({required this.title, required this.body});
-
-  // Static method to create a Notification from INotificationsResponse
-  static Notification fromResponse(INotificationsResponse response) {
-    return Notification(
-      title: response.header ??
-          'No notification title', // Assuming INotificationsResponse has a title property
-      body: response.body ??
-          'No notification content', // Assuming INotificationsResponse has a body property
-    );
-  }
-}
-
 class DriveItem {
   final String id;
   final String name;
@@ -304,7 +286,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           limit: posts,
         ),
       );
-      // No need to map to a separate model; we can use DriveFile directly
+      if (kDebugMode) {
+        print('------------------ DRIVE DEBUG ------------------');
+        print(response);
+        print('------------------ DRIVE DEBUG ------------------');
+      }
       return response.toList();
     } catch (e) {
       print('Error: $e');
@@ -319,6 +305,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           limit: posts,
         ),
       );
+      if (kDebugMode) {
+        print('------------------ HOME DEBUG ------------------');
+        print(response);
+        print('------------------ HOME DEBUG ------------------');
+      }
       return response.toList();
     } catch (e) {
       return []; // Return an empty list on error
@@ -332,6 +323,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           limit: posts,
         ),
       );
+            if (kDebugMode) {
+        print('------------------ LOCAL DEBUG ------------------');
+        print(response);
+        print('------------------ LOCAL DEBUG ------------------');
+      }
       return response.toList();
     } catch (e) {
       return []; // Return an empty list on error
@@ -345,41 +341,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           limit: posts,
         ),
       );
+            if (kDebugMode) {
+        print('------------------ GLOBAL DEBUG ------------------');
+        print(response);
+        print('------------------ GLOBAL DEBUG ------------------');
+      }
       return response.toList();
     } catch (e) {
       return []; // Return an empty list on error
     }
-  }
-
-  Future<List<INotificationsResponse>> fetchNotifications() async {
-    try {
-      final response = await client.i.notifications(
-        INotificationsRequest(
-          limit: posts, // Adjust the limit if needed
-        ),
-      );
-
-      // Print the response for debugging
-      print(
-          '-------------------------- Notifications --------------------------');
-      print('API Response: $response');
-      print(
-          '-------------------------- Notifications --------------------------');
-
-      // No need to map to a separate model; we can use DriveFile directly
-      return response.toList();
-    } catch (e) {
-      print('Error: $e');
-      return []; // Return an empty list on error
-    }
-  }
-
-// Example conversion method (You need to define it according to your classes)
-  Notification convertToNotification(INotificationsResponse notifResponse) {
-    return Notification(
-      title: notifResponse.header ?? 'none',
-      body: notifResponse.body ?? 'none',
-    );
   }
 
   clearData() {
@@ -1093,44 +1063,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       kToolbarHeight - // Subtract the app bar height
                       kBottomNavigationBarHeight -
                       65, // Subtract the bottom nav bar height
-                  child: FutureBuilder<List<INotificationsResponse>>(
-                    future: fetchNotifications(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                            child: Text('No notifications available.'));
-                      } else {
-                        final driveItems = snapshot.data!;
-                        return ListView.builder(
-                          shrinkWrap:
-                              true, // Enable shrinkWrap to prevent unbounded height
-                          itemCount: driveItems.length,
-                          itemBuilder: (context, index) {
-                            final driveItem = driveItems[index];
-                            return Column(
-                              children: [
-                                ListTile(
-                                  leading:
-                                      const Icon(Icons.notifications_rounded),
-                                  title: Text(driveItem.header ?? 'No title'),
-                                  subtitle:
-                                      Text(driveItem.body ?? 'No content'),
-                                  onTap: () {
-                                    vibrateError();
-                                  },
-                                ),
-                                const Divider(),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
-                  ),
+                  child: Text('data')
                 ),
               ),
               Visibility(
