@@ -44,7 +44,7 @@ class Home extends StatelessWidget {
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return MaterialApp(
-          title: 'Catkeys',
+          title: 'CatKeys',
           themeMode: ThemeMode.dark,
           darkTheme: ThemeData(
             useMaterial3: true,
@@ -53,7 +53,7 @@ class Home extends StatelessWidget {
                     seedColor: Colors.purple, brightness: Brightness.dark),
             fontFamily: 'Inter',
           ),
-          home: const HomePage(title: 'Catkeys'),
+          home: const HomePage(title: 'CatKeys'),
         );
       },
     );
@@ -359,7 +359,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => const SetupPage(title: 'Catkeys setup')),
+            builder: (context) => const SetupPage(title: 'CatKeys setup')),
       );
     });
   }
@@ -1055,17 +1055,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              Visibility(
+                Visibility(
                 visible: currentPageIndex == 1,
                 maintainState: true,
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height -
-                      kToolbarHeight - // Subtract the app bar height
-                      kBottomNavigationBarHeight -
-                      65, // Subtract the bottom nav bar height
-                  child: Text('data')
+                    kToolbarHeight - // Subtract the app bar height
+                    kBottomNavigationBarHeight -
+                    65, // Subtract the bottom nav bar height
+                  child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child:                 Card(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start, // Align children to the top
+                      children: [
+                        Icon(
+                          Icons.info_rounded,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            "This page will display several different account statistics such as drive usage, followers, following, and more. This page is still under development.",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+                  ),
+                ),
+                ),
               Visibility(
                 visible: currentPageIndex == 2,
                 maintainState: true,
@@ -1610,9 +1640,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 label: 'Home',
               ),
               const NavigationDestination(
-                selectedIcon: Icon(Icons.notifications_rounded),
-                icon: Icon(Icons.notifications_outlined),
-                label: 'Notifications',
+                selectedIcon: Icon(Icons.show_chart_rounded),
+                icon: Icon(Icons.show_chart_rounded),
+                label: 'Status',
               ),
               const NavigationDestination(
                 icon: Icon(Icons.cloud_rounded),
