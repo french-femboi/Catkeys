@@ -102,6 +102,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String userFollowing = '-';
   String userNotes = '-';
   String userDescription = '-';
+  String userJoined = '-';
+  String userBirthday = '-';
+  String userLocation = '-';
+  String userLang = '-';
   String userStatus = '-';
   String userID = '';
   int _selectedChip = 1;
@@ -167,6 +171,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       userDescription = res.description.toString();
       userStatus = res.onlineStatus.toString();
       userID = res.id.toString();
+      userJoined =
+          (DateFormat('dd/MM/yyyy – kk:mm').format(res.createdAt)).toString();
+      userBirthday = res.birthday != null
+          ? (DateFormat('dd/MM/yyyy – kk:mm').format(res.birthday!)).toString()
+          : '-';
+      userLocation = res.location.toString();
+      userLang = res.lang.toString();
     });
   }
 
@@ -323,7 +334,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           limit: posts,
         ),
       );
-            if (kDebugMode) {
+      if (kDebugMode) {
         print('------------------ LOCAL DEBUG ------------------');
         print(response);
         print('------------------ LOCAL DEBUG ------------------');
@@ -341,7 +352,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           limit: posts,
         ),
       );
-            if (kDebugMode) {
+      if (kDebugMode) {
         print('------------------ GLOBAL DEBUG ------------------');
         print(response);
         print('------------------ GLOBAL DEBUG ------------------');
@@ -1055,47 +1066,50 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-                Visibility(
+              Visibility(
                 visible: currentPageIndex == 1,
                 maintainState: true,
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height -
-                    kToolbarHeight - // Subtract the app bar height
-                    kBottomNavigationBarHeight -
-                    65, // Subtract the bottom nav bar height
+                      kToolbarHeight - // Subtract the app bar height
+                      kBottomNavigationBarHeight -
+                      65, // Subtract the bottom nav bar height
                   child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child:                 Card(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // Align children to the top
-                      children: [
-                        Icon(
-                          Icons.info_rounded,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            "This page will display several different account statistics such as drive usage, followers, following, and more. This page is still under development.",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Card(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align children to the top
+                          children: [
+                            Icon(
+                              Icons.info_rounded,
+                              color: Theme.of(context).colorScheme.secondary,
                             ),
-                            textAlign: TextAlign.start,
-                          ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                "This page will display several different account statistics such as drive usage, followers, following, and more. This page is still under development.",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-                  ),
-                ),
-                ),
+              ),
               Visibility(
                 visible: currentPageIndex == 2,
                 maintainState: true,
@@ -1164,266 +1178,322 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Visibility(
                 visible: currentPageIndex == 3,
                 maintainState: true,
-                child: Column(
-                  mainAxisSize: MainAxisSize
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height -
+                    kToolbarHeight - // Subtract the app bar height
+                    kBottomNavigationBarHeight -
+                    65,
+                  child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize
                       .min, // Ensure the Column doesn't expand infinitely
-                  children: [
+                    children: [
                     Container(
                       width: double.infinity,
                       height: 200, // Set a fixed height for the banner
                       child: Stack(
-                        fit: StackFit
-                            .expand, // Ensure the stack and its children fill the available space
+                      fit: StackFit
+                        .expand, // Ensure the stack and its children fill the available space
+                      children: [
+                        // Banner image
+                        Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                          image:
+                            CachedNetworkImageProvider(profileBanner),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                          ),
+                        ),
+                        ),
+                        // Gradient overlay
+                        Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context)
+                              .colorScheme
+                              .surfaceContainer
+                              .withOpacity(0.9),
+                            Colors.transparent
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          ),
+                        ),
+                        ),
+                        // Content
+                        Column(
                         children: [
-                          // Banner image
-                          Container(
-                            width: double.infinity,
+                          const SizedBox(height: 30),
+                          Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const SizedBox(width: 30),
+                            Container(
                             decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image:
-                                    CachedNetworkImageProvider(profileBanner),
-                                fit: BoxFit.cover,
-                                alignment: Alignment.topCenter,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                              color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainer,
+                              width: 3,
                               ),
                             ),
-                          ),
-                          // Gradient overlay
-                          Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainer
-                                      .withOpacity(0.9),
-                                  Colors.transparent
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
+                            child: CircleAvatar(
+                              backgroundImage:
+                                CachedNetworkImageProvider(
+                                  profilePicture),
+                              radius: 65,
                             ),
+                            ),
+                          ],
                           ),
-                          // Content
-                          Column(
-                            children: [
-                              const SizedBox(height: 30),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  const SizedBox(width: 30),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainer,
-                                        width: 3,
-                                      ),
-                                    ),
-                                    child: CircleAvatar(
-                                      backgroundImage:
-                                          CachedNetworkImageProvider(
-                                              profilePicture),
-                                      radius: 65,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 30),
-                            ],
-                          ),
+                          const SizedBox(height: 30),
                         ],
+                        ),
+                      ],
                       ),
                     ),
                     const SizedBox(height: 20),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                        Text(
+                          userName,
+                          style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '@$userHandle - $url',
+                          style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
+                          style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Divider(),
+                        const SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              userName,
+                          Column(
+                            children: [
+                            Icon(Icons.edit_note_rounded,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .primary),
+                            const SizedBox(height: 8),
+                            Text('Notes',
                               style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              '@$userHandle - $url',
+                                color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary)),
+                            const SizedBox(height: 4),
+                            Text(userNotes,
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
+                              )), // Replace '200' with the actual value
+                            ],
+                          ),
+                          const SizedBox(width: 28),
+                          Column(
+                            children: [
+                            Icon(Icons.person_add_rounded,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .primary),
+                            const SizedBox(height: 8),
+                            Text('Following',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary)),
+                            const SizedBox(height: 4),
+                            Text(userFollowing,
                               style: const TextStyle(
-                                fontSize: 16,
                                 color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Divider(),
-                            const SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Column(
-                                  children: [
-                                    Icon(Icons.edit_note_rounded,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                    const SizedBox(height: 8),
-                                    Text('Notes',
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)),
-                                    const SizedBox(height: 4),
-                                    Text(userNotes,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        )), // Replace '200' with the actual value
-                                  ],
-                                ),
-                                const SizedBox(width: 28),
-                                Column(
-                                  children: [
-                                    Icon(Icons.person_add_rounded,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                    const SizedBox(height: 8),
-                                    Text('Following',
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)),
-                                    const SizedBox(height: 4),
-                                    Text(userFollowing,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        )), // Replace '200' with the actual value
-                                  ],
-                                ),
-                                const SizedBox(width: 28),
-                                Column(
-                                  children: [
-                                    Icon(Icons.people_rounded,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                    const SizedBox(height: 8),
-                                    Text('Followers',
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)),
-                                    const SizedBox(height: 4),
-                                    Text(userFollowers,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        )), // Replace '100' with the actual value
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            const Divider(),
-                            const SizedBox(height: 10),
-                            MarkdownBody(
-                              data: userDescription ??
-                                  'No description available', // Markdown text
-                              styleSheet: MarkdownStyleSheet(
-                                p: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white, // Text style
-                                ),
-                              ),
-                              onTapLink: (text, url, title) {
-                                if (url != null) {
-                                  openLink(url); // Open the link when tapped
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            const Divider(),
-                            const SizedBox(height: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                vibrateSelection();
-                                openLink('https://$url/@$userHandle');
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.secondary,
-                                backgroundColor: Colors
-                                    .transparent, // Set the button's text color
-                                side: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .secondary), // Add a border to the button
-                                minimumSize: const Size(double.infinity,
-                                    40), // Set the button's width to full width and height to 40
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons
-                                      .open_in_browser_rounded), // Add your desired icon
-                                  SizedBox(
-                                      width:
-                                          8), // Add some spacing between the icon and text
-                                  Text(
-                                      'Open profile in browser'), // Add your desired text
-                                ],
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                vibrateSelection();
-                                navProfile(userID);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.secondary,
-                                backgroundColor: Colors
-                                    .transparent, // Set the button's text color
-                                side: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .secondary), // Add a border to the button
-                                minimumSize: const Size(double.infinity,
-                                    40), // Set the button's width to full width and height to 40
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons
-                                      .exit_to_app_rounded), // Add your desired icon
-                                  SizedBox(
-                                      width:
-                                          8), // Add some spacing between the icon and text
-                                  Text(
-                                      'Open advanced profile view'), // Add your desired text
-                                ],
-                              ),
-                            )
+                              )), // Replace '200' with the actual value
+                            ],
+                          ),
+                          const SizedBox(width: 28),
+                          Column(
+                            children: [
+                            Icon(Icons.people_rounded,
+                              color: Theme.of(context)
+                                .colorScheme
+                                .primary),
+                            const SizedBox(height: 8),
+                            Text('Followers',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary)),
+                            const SizedBox(height: 4),
+                            Text(userFollowers,
+                              style: const TextStyle(
+                                color: Colors.white,
+                              )), // Replace '100' with the actual value
+                            ],
+                          ),
                           ],
                         ),
+                        const SizedBox(height: 5),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        Text("Information",
+                          style: const TextStyle(
+                            color: Colors.white,
+                          )), //
+                        MarkdownBody(
+                          data:
+                            '**Joined:** $userJoined', // Markdown text
+                          styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white, // Text style
+                          ),
+                          ),
+                        ),
+                        MarkdownBody(
+                          data:
+                            '**Birthday:** $userBirthday', // Markdown text
+                          styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white, // Text style
+                          ),
+                          ),
+                        ),
+                        MarkdownBody(
+                          data:
+                            '**Location:** $userLocation', // Markdown text
+                          styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white, // Text style
+                          ),
+                          ),
+                        ),
+                        MarkdownBody(
+                          data:
+                            '**Language:** $userLang', // Markdown text
+                          styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white, // Text style
+                          ),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        MarkdownBody(
+                          data: userDescription ??
+                            'No description available', // Markdown text
+                          styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white, // Text style
+                          ),
+                          ),
+                          onTapLink: (text, url, title) {
+                          if (url != null) {
+                            openLink(url); // Open the link when tapped
+                          }
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                          vibrateSelection();
+                          openLink('https://$url/@$userHandle');
+                          },
+                          style: ElevatedButton.styleFrom(
+                          foregroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                          backgroundColor: Colors
+                            .transparent, // Set the button's text color
+                          side: BorderSide(
+                            color: Theme.of(context)
+                              .colorScheme
+                              .secondary), // Add a border to the button
+                          minimumSize: const Size(double.infinity,
+                            40), // Set the button's width to full width and height to 40
+                          ),
+                          child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons
+                              .open_in_browser_rounded), // Add your desired icon
+                            SizedBox(
+                              width:
+                                8), // Add some spacing between the icon and text
+                            Text(
+                              'Open profile in browser'), // Add your desired text
+                          ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                          vibrateSelection();
+                          navProfile(userID);
+                          },
+                          style: ElevatedButton.styleFrom(
+                          foregroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                          backgroundColor: Colors
+                            .transparent, // Set the button's text color
+                          side: BorderSide(
+                            color: Theme.of(context)
+                              .colorScheme
+                              .secondary), // Add a border to the button
+                          minimumSize: const Size(double.infinity,
+                            40), // Set the button's width to full width and height to 40
+                          ),
+                          child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons
+                              .exit_to_app_rounded), // Add your desired icon
+                            SizedBox(
+                              width:
+                                8), // Add some spacing between the icon and text
+                            Text(
+                              'Open advanced profile view'), // Add your desired text
+                          ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ],
+                      ),
                       ),
                     ),
                     // Add more profile content here
-                  ],
+                    ],
+                  ),
+                  ),
                 ),
               ),
             ],
