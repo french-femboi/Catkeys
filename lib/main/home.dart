@@ -108,13 +108,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String userLang = '-';
   String userStatus = '-';
   String userID = '';
-  
+
+  Map<String, String> _customEmojis = {};
 
   bool showProfile = false;
 
   String ext_profilePicture = '';
   String ext_userID = '';
-  String ext_instance= '';
+  String ext_instance = '';
   int _selectedChip = 1;
   int posts = 250;
   int tabIndex = 0;
@@ -134,6 +135,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         token: token,
       );
       lookupAccount();
+      _loadEmojis();
     }
   }
 
@@ -163,6 +165,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+  }
+
+  Future<Map<String, String>> fetchCustomEmojis() async {
+    // Assuming you have a method to make a request to the Misskey API.
+    final response = await client.emojis(); // Fetches custom emojis
+    Map<String, String> emojiMap = {};
+
+    for (var emoji in response.emojis) {
+      // Assuming 'emojis' is the iterable property
+      emojiMap[emoji.name] =
+          (emoji.url).toString(); // Map emoji name to its URL
+    }
+
+    return emojiMap;
+  }
+
+  Future<void> _loadEmojis() async {
+    Map<String, String> emojis =
+        await fetchCustomEmojis(); // Fetch the emojis from Misskey
+    setState(() {
+      _customEmojis = emojis; // Update the state with the fetched emojis
+    });
+  }
+
+  String _replaceEmojis(String text) {
+    String modifiedText = text;
+    _customEmojis.forEach((emojiCode, emojiUrl) {
+      final emojiMarkdown = '![]($emojiUrl)';
+      modifiedText = modifiedText.replaceAll(':$emojiCode:', emojiMarkdown);
+    });
+    return modifiedText;
   }
 
   lookupAccount() async {
@@ -705,8 +738,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                           if (note.text != null ||
                                               note.renote?.text != null)
                                             MarkdownBody(
-                                              data: note.text ??
-                                                  note.renote?.text ??
+                                              data: _replaceEmojis(
+                                                      note.text ?? '') ??
+                                                  _replaceEmojis(
+                                                      note.renote?.text ??
+                                                          '') ??
                                                   'No content available',
                                               styleSheet: MarkdownStyleSheet(
                                                 p: const TextStyle(
@@ -718,6 +754,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                   vibrateSelection();
                                                   openLink(url);
                                                 }
+                                              },
+                                              imageBuilder: (uri, title, alt) {
+                                                // Here we control the size of the custom emojis
+                                                return Image.network(
+                                                  uri.toString(),
+                                                  width:
+                                                      20, // Adjust the width of the emoji
+                                                  height:
+                                                      20, // Adjust the height of the emoji
+                                                  fit: BoxFit.contain,
+                                                );
                                               },
                                             ),
                                           if (note.files != null &&
@@ -1313,9 +1360,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 Text(
                                   '@$userHandle - ${ext_instance == "null" ? url : ext_instance}',
                                   style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -1400,7 +1447,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                     style: const TextStyle(
                                       color: Colors.white,
                                     )),
-                                if (userJoined != "-" && userJoined != "null") //
+                                if (userJoined != "-" &&
+                                    userJoined != "null") //
                                   MarkdownBody(
                                     data:
                                         '**Joined:** $userJoined', // Markdown text
@@ -1411,7 +1459,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
-                                if (userBirthday != "-" && userBirthday != "null")
+                                if (userBirthday != "-" &&
+                                    userBirthday != "null")
                                   MarkdownBody(
                                     data:
                                         '**Birthday:** $userBirthday', // Markdown text
@@ -1422,7 +1471,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
-                                if (userLocation != "-" && userLocation != "null")
+                                if (userLocation != "-" &&
+                                    userLocation != "null")
                                   MarkdownBody(
                                     data:
                                         '**Location:** $userLocation', // Markdown text
@@ -1469,7 +1519,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 ElevatedButton(
                                   onPressed: () {
                                     vibrateSelection();
-                                    openLink('https://$url/@$userHandle${ext_instance != "null" ? "@$ext_instance" : ""}');
+                                    openLink(
+                                        'https://$url/@$userHandle${ext_instance != "null" ? "@$ext_instance" : ""}');
                                   },
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor:

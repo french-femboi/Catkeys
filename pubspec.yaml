@@ -2,7 +2,7 @@ name: catkeys
 description: "French Femboi's custom Misskey client."
 publish_to: 'none' 
 
-version: 0.0.6-alpha+006
+version: 0.0.7-alpha+007
 
 environment:
   sdk: ^3.5.1
