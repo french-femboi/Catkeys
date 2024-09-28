@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:misskey_dart/misskey_dart.dart';
 import 'package:toastification/toastification.dart';
@@ -21,7 +22,6 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import '../pre/setup.dart';
-import 'profile.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -108,6 +108,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String userLang = '-';
   String userStatus = '-';
   String userID = '';
+  
+
+  bool showProfile = false;
+
+  String ext_profilePicture = '';
+  String ext_userID = '';
+  String ext_instance= '';
   int _selectedChip = 1;
   int posts = 250;
   int tabIndex = 0;
@@ -179,6 +186,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       userLocation = res.location.toString();
       userLang = res.lang.toString();
     });
+  }
+
+  openProfile(uID) async {
+    try {
+      final res = await client.users.show(
+        UsersShowRequest(
+          userId: uID, // Replace with the actual user ID
+        ),
+      );
+      setState(() {
+        ext_profilePicture = res.avatarUrl.toString();
+        ext_instance = res.host.toString();
+        profileBanner = res.bannerUrl.toString();
+        userName = res.name.toString();
+        userHandle = res.username.toString();
+        userFollowers = res.followersCount.toString();
+        userFollowing = res.followingCount.toString();
+        userNotes = res.notesCount.toString();
+        userDescription = res.description.toString();
+        userStatus = res.onlineStatus.toString();
+        ext_userID = res.id.toString();
+        userJoined =
+            (DateFormat('dd/MM/yyyy – kk:mm').format(res.createdAt)).toString();
+        userBirthday = res.birthday != null
+            ? (DateFormat('dd/MM/yyyy – kk:mm').format(res.birthday!))
+                .toString()
+            : '-';
+        userLocation = res.location.toString();
+        userLang = res.lang.toString();
+      });
+    } catch (e) {
+      print('Error: $e'); // Catch and print any errors
+    }
   }
 
   @override
@@ -407,14 +447,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  navProfile(uID) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('catkeys_view_user', uID);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const ProfilePage(title: 'User profile')),
-    );
+  navProfile() {
+    currentPageIndex = 3;
   }
 
   Future<bool> isVideoFile(String url) async {
@@ -896,7 +930,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       leading: GestureDetector(
                                         onTap: () {
                                           vibrateSelection();
-                                          navProfile(note.userId);
+                                          openProfile(note.userId);
+                                          navProfile();
                                         },
                                         child: CircleAvatar(
                                           backgroundImage: NetworkImage(
@@ -1176,323 +1211,330 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
               Visibility(
-                visible: currentPageIndex == 3,
+                visible: currentPageIndex == 3 || currentPageIndex == 4,
                 maintainState: true,
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height -
-                    kToolbarHeight - // Subtract the app bar height
-                    kBottomNavigationBarHeight -
-                    65,
+                      kToolbarHeight - // Subtract the app bar height
+                      kBottomNavigationBarHeight -
+                      65,
                   child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize
-                      .min, // Ensure the Column doesn't expand infinitely
-                    children: [
-                    Container(
-                      width: double.infinity,
-                      height: 200, // Set a fixed height for the banner
-                      child: Stack(
-                      fit: StackFit
-                        .expand, // Ensure the stack and its children fill the available space
+                    child: Column(
+                      mainAxisSize: MainAxisSize
+                          .min, // Ensure the Column doesn't expand infinitely
                       children: [
-                        // Banner image
                         Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                          image:
-                            CachedNetworkImageProvider(profileBanner),
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          ),
-                        ),
-                        ),
-                        // Gradient overlay
-                        Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context)
-                              .colorScheme
-                              .surfaceContainer
-                              .withOpacity(0.9),
-                            Colors.transparent
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          ),
-                        ),
-                        ),
-                        // Content
-                        Column(
-                        children: [
-                          const SizedBox(height: 30),
-                          Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            const SizedBox(width: 30),
-                            Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                              color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainer,
-                              width: 3,
+                          width: double.infinity,
+                          height: 200, // Set a fixed height for the banner
+                          child: Stack(
+                            fit: StackFit
+                                .expand, // Ensure the stack and its children fill the available space
+                            children: [
+                              // Banner image
+                              Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: CachedNetworkImageProvider(
+                                        profileBanner),
+                                    fit: BoxFit.cover,
+                                    alignment: Alignment.topCenter,
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: CircleAvatar(
-                              backgroundImage:
-                                CachedNetworkImageProvider(
-                                  profilePicture),
-                              radius: 65,
-                            ),
-                            ),
-                          ],
-                          ),
-                          const SizedBox(height: 30),
-                        ],
-                        ),
-                      ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                        Text(
-                          userName,
-                          style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '@$userHandle - $url',
-                          style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
-                          style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        const Divider(),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                          Column(
-                            children: [
-                            Icon(Icons.edit_note_rounded,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .primary),
-                            const SizedBox(height: 8),
-                            Text('Notes',
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                  .colorScheme
-                                  .secondary)),
-                            const SizedBox(height: 4),
-                            Text(userNotes,
-                              style: const TextStyle(
-                                color: Colors.white,
-                              )), // Replace '200' with the actual value
+                              // Gradient overlay
+                              Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainer
+                                          .withOpacity(0.9),
+                                      Colors.transparent
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                ),
+                              ),
+                              // Content
+                              Column(
+                                children: [
+                                  const SizedBox(height: 30),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(width: 30),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainer,
+                                            width: 3,
+                                          ),
+                                        ),
+                                        child: CircleAvatar(
+                                          backgroundImage:
+                                              CachedNetworkImageProvider(
+                                                  ext_profilePicture),
+                                          radius: 65,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 30),
+                                ],
+                              ),
                             ],
-                          ),
-                          const SizedBox(width: 28),
-                          Column(
-                            children: [
-                            Icon(Icons.person_add_rounded,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .primary),
-                            const SizedBox(height: 8),
-                            Text('Following',
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                  .colorScheme
-                                  .secondary)),
-                            const SizedBox(height: 4),
-                            Text(userFollowing,
-                              style: const TextStyle(
-                                color: Colors.white,
-                              )), // Replace '200' with the actual value
-                            ],
-                          ),
-                          const SizedBox(width: 28),
-                          Column(
-                            children: [
-                            Icon(Icons.people_rounded,
-                              color: Theme.of(context)
-                                .colorScheme
-                                .primary),
-                            const SizedBox(height: 8),
-                            Text('Followers',
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                  .colorScheme
-                                  .secondary)),
-                            const SizedBox(height: 4),
-                            Text(userFollowers,
-                              style: const TextStyle(
-                                color: Colors.white,
-                              )), // Replace '100' with the actual value
-                            ],
-                          ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        const Divider(),
-                        const SizedBox(height: 10),
-                        Text("Information",
-                          style: const TextStyle(
-                            color: Colors.white,
-                          )), //
-                        MarkdownBody(
-                          data:
-                            '**Joined:** $userJoined', // Markdown text
-                          styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white, // Text style
-                          ),
-                          ),
-                        ),
-                        MarkdownBody(
-                          data:
-                            '**Birthday:** $userBirthday', // Markdown text
-                          styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white, // Text style
-                          ),
-                          ),
-                        ),
-                        MarkdownBody(
-                          data:
-                            '**Location:** $userLocation', // Markdown text
-                          styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white, // Text style
-                          ),
-                          ),
-                        ),
-                        MarkdownBody(
-                          data:
-                            '**Language:** $userLang', // Markdown text
-                          styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white, // Text style
-                          ),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        const Divider(),
-                        const SizedBox(height: 10),
-                        MarkdownBody(
-                          data: userDescription ??
-                            'No description available', // Markdown text
-                          styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white, // Text style
-                          ),
-                          ),
-                          onTapLink: (text, url, title) {
-                          if (url != null) {
-                            openLink(url); // Open the link when tapped
-                          }
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        const Divider(),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                          vibrateSelection();
-                          openLink('https://$url/@$userHandle');
-                          },
-                          style: ElevatedButton.styleFrom(
-                          foregroundColor:
-                            Theme.of(context).colorScheme.secondary,
-                          backgroundColor: Colors
-                            .transparent, // Set the button's text color
-                          side: BorderSide(
-                            color: Theme.of(context)
-                              .colorScheme
-                              .secondary), // Add a border to the button
-                          minimumSize: const Size(double.infinity,
-                            40), // Set the button's width to full width and height to 40
-                          ),
-                          child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons
-                              .open_in_browser_rounded), // Add your desired icon
-                            SizedBox(
-                              width:
-                                8), // Add some spacing between the icon and text
-                            Text(
-                              'Open profile in browser'), // Add your desired text
-                          ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                          vibrateSelection();
-                          navProfile(userID);
-                          },
-                          style: ElevatedButton.styleFrom(
-                          foregroundColor:
-                            Theme.of(context).colorScheme.secondary,
-                          backgroundColor: Colors
-                            .transparent, // Set the button's text color
-                          side: BorderSide(
-                            color: Theme.of(context)
-                              .colorScheme
-                              .secondary), // Add a border to the button
-                          minimumSize: const Size(double.infinity,
-                            40), // Set the button's width to full width and height to 40
-                          ),
-                          child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons
-                              .exit_to_app_rounded), // Add your desired icon
-                            SizedBox(
-                              width:
-                                8), // Add some spacing between the icon and text
-                            Text(
-                              'Open advanced profile view'), // Add your desired text
-                          ],
                           ),
                         ),
                         const SizedBox(height: 20),
-                        ],
-                      ),
-                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  userName,
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  '@$userHandle - ${ext_instance == "null" ? url : ext_instance}',
+                                  style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                const Divider(),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Icon(Icons.edit_note_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                        const SizedBox(height: 8),
+                                        Text('Notes',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary)),
+                                        const SizedBox(height: 4),
+                                        Text(userNotes,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            )), // Replace '200' with the actual value
+                                      ],
+                                    ),
+                                    const SizedBox(width: 28),
+                                    Column(
+                                      children: [
+                                        Icon(Icons.person_add_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                        const SizedBox(height: 8),
+                                        Text('Following',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary)),
+                                        const SizedBox(height: 4),
+                                        Text(userFollowing,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            )), // Replace '200' with the actual value
+                                      ],
+                                    ),
+                                    const SizedBox(width: 28),
+                                    Column(
+                                      children: [
+                                        Icon(Icons.people_rounded,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                        const SizedBox(height: 8),
+                                        Text('Followers',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary)),
+                                        const SizedBox(height: 4),
+                                        Text(userFollowers,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            )), // Replace '100' with the actual value
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 5),
+                                const Divider(),
+                                const SizedBox(height: 10),
+                                Text("Information",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                    )),
+                                if (userJoined != "-") //
+                                  MarkdownBody(
+                                    data:
+                                        '**Joined:** $userJoined', // Markdown text
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white, // Text style
+                                      ),
+                                    ),
+                                  ),
+                                if (userBirthday != "-")
+                                  MarkdownBody(
+                                    data:
+                                        '**Birthday:** $userBirthday', // Markdown text
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white, // Text style
+                                      ),
+                                    ),
+                                  ),
+                                if (userLocation != "-")
+                                  MarkdownBody(
+                                    data:
+                                        '**Location:** $userLocation', // Markdown text
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white, // Text style
+                                      ),
+                                    ),
+                                  ),
+                                if (userLang != "-")
+                                  MarkdownBody(
+                                    data:
+                                        '**Language:** $userLang', // Markdown text
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white, // Text style
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 5),
+                                const Divider(),
+                                const SizedBox(height: 10),
+                                MarkdownBody(
+                                  data: userDescription ??
+                                      'No description available', // Markdown text
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white, // Text style
+                                    ),
+                                  ),
+                                  onTapLink: (text, url, title) {
+                                    if (url != null) {
+                                      openLink(
+                                          url); // Open the link when tapped
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                const Divider(),
+                                const SizedBox(height: 10),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    vibrateSelection();
+                                    openLink('https://$url/@$userHandle${ext_instance != "null" ? "@$ext_instance" : ""}');
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.secondary,
+                                    backgroundColor: Colors
+                                        .transparent, // Set the button's text color
+                                    side: BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary), // Add a border to the button
+                                    minimumSize: const Size(double.infinity,
+                                        40), // Set the button's width to full width and height to 40
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons
+                                          .open_in_browser_rounded), // Add your desired icon
+                                      SizedBox(
+                                          width:
+                                              8), // Add some spacing between the icon and text
+                                      Text(
+                                          'Open profile in browser'), // Add your desired text
+                                    ],
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    vibrateSelection();
+                                    Share.share(
+                                        'Check out this user profile: https://$url/@$userHandle');
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.secondary,
+                                    backgroundColor: Colors
+                                        .transparent, // Set the button's text color
+                                    side: BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary), // Add a border to the button
+                                    minimumSize: const Size(double.infinity,
+                                        40), // Set the button's width to full width and height to 40
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons
+                                          .share_rounded), // Add your desired icon
+                                      SizedBox(
+                                          width:
+                                              8), // Add some spacing between the icon and text
+                                      Text(
+                                          'Share profile'), // Add your desired text
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Add more profile content here
+                      ],
                     ),
-                    // Add more profile content here
-                    ],
-                  ),
                   ),
                 ),
               ),
@@ -1701,6 +1743,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 currentPageIndex = index;
                 if (currentPageIndex == 3) {
                   lookupAccount();
+                  openProfile(userID);
+                } else {
+                  openProfile(userID);
                 }
               });
             },
@@ -1729,7 +1774,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
                 label: userName,
               ),
-            ],
+            ].where((destination) => destination != null).toList(),
           ),
         ),
       ),
