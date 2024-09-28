@@ -738,12 +738,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                           if (note.text != null ||
                                               note.renote?.text != null)
                                             MarkdownBody(
-                                              data: _replaceEmojis(
-                                                      note.text ?? '') ??
-                                                  _replaceEmojis(
-                                                      note.renote?.text ??
-                                                          '') ??
-                                                  'No content available',
+                                              data: note.text?.isNotEmpty ==
+                                                      true
+                                                  ? _replaceEmojis(
+                                                      note.text ?? '')
+                                                  : _replaceEmojis(note
+                                                          .renote?.text ??
+                                                      'No content available'),
                                               styleSheet: MarkdownStyleSheet(
                                                 p: const TextStyle(
                                                   color: Colors.white,
