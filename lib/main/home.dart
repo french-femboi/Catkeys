@@ -198,6 +198,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return modifiedText;
   }
 
+  String _convertHashtagsToLinks(String text) {
+    final hashtagRegex = RegExp(r'(\#[a-zA-Z0-9_]+)');
+    return text.replaceAllMapped(hashtagRegex, (match) {
+      final hashtag = match.group(0);
+      return '[$hashtag]($hashtag)'; // Markdown link format
+    });
+  }
+
   lookupAccount() async {
     final res = await client.i.i();
     setState(() {
@@ -463,11 +471,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       await launch(url);
     } else {
       Fluttertoast.showToast(
-        msg: 'There while launching a browser!',
+        msg: 'There was an error while launching your browser: $url',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.TOP,
-        backgroundColor: Theme.of(context).colorScheme.onErrorContainer,
-        textColor: Theme.of(context).colorScheme.error,
+        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+        textColor: Theme.of(context).colorScheme.onErrorContainer,
       );
     }
   }
@@ -740,20 +748,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             MarkdownBody(
                                               data: note.text?.isNotEmpty ==
                                                       true
-                                                  ? _replaceEmojis(
-                                                      note.text ?? '')
-                                                  : _replaceEmojis(note
-                                                          .renote?.text ??
-                                                      'No content available'),
+                                                  ? _convertHashtagsToLinks(
+                                                      _replaceEmojis(
+                                                          note.text ?? ''))
+                                                  : _convertHashtagsToLinks(
+                                                      _replaceEmojis(note
+                                                              .renote?.text ??
+                                                          'No content available')),
                                               styleSheet: MarkdownStyleSheet(
                                                 p: const TextStyle(
                                                   color: Colors.white,
                                                 ),
+                                                a: TextStyle(
+                                                  // Custom link style
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary, // Links in green
+                                                ),
                                               ),
-                                              onTapLink: (text, url, title) {
-                                                if (url != null) {
+                                              onTapLink: (text, post_url, title) {
+                                                if (post_url != null) {
                                                   vibrateSelection();
-                                                  openLink(url);
+                                                  if (post_url.startsWith("#")) {
+                                                    // Handle hashtag tap event here
+                                                    openLink("https://$url/tags/${post_url.substring(1)}");
+                                                    // Navigate to a hashtag-specific screen or search
+                                                  } else {
+                                                    openLink(
+                                                        post_url); // Handle normal URLs
+                                                  }
                                                 }
                                               },
                                               imageBuilder: (uri, title, alt) {
@@ -1014,6 +1037,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                 'https://$url/notes/${note.id}');
                                           },
                                         ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.share,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary, // Change the color to red
+                                          ),
+                                          onPressed: () async {
+                                            vibrateSelection();
+                                            Share.share(
+                                                'https://$url/notes/${note.id}');
+                                          },
+                                        ),
                                         if (note.user.username == userHandle)
                                           IconButton(
                                             icon: Icon(
@@ -1123,6 +1159,43 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                 ),
                                                 Text(
                                                   'Followers only',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                        if (note.replyId != null) ...[
+                                          Container(
+                                            padding: const EdgeInsets.only(
+                                                right:
+                                                    3.0), // Add padding only on the right side
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                width: 1.0,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.reply_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                                Text(
+                                                  'Reply',
                                                   style: TextStyle(
                                                       fontSize: 12,
                                                       color: Theme.of(context)
