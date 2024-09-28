@@ -1400,7 +1400,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                     style: const TextStyle(
                                       color: Colors.white,
                                     )),
-                                if (userJoined != "-") //
+                                if (userJoined != "-" && userJoined != "null") //
                                   MarkdownBody(
                                     data:
                                         '**Joined:** $userJoined', // Markdown text
@@ -1411,7 +1411,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
-                                if (userBirthday != "-")
+                                if (userBirthday != "-" && userBirthday != "null")
                                   MarkdownBody(
                                     data:
                                         '**Birthday:** $userBirthday', // Markdown text
@@ -1422,7 +1422,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
-                                if (userLocation != "-")
+                                if (userLocation != "-" && userLocation != "null")
                                   MarkdownBody(
                                     data:
                                         '**Location:** $userLocation', // Markdown text
@@ -1433,7 +1433,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
-                                if (userLang != "-")
+                                if (userLang != "-" && userLang != "null")
                                   MarkdownBody(
                                     data:
                                         '**Language:** $userLang', // Markdown text
