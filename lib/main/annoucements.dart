@@ -1,0 +1,1 @@
+//create annoucement page to display misskey internal annoucements - derive from already created page

@@ -131,11 +131,14 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              Icon(
-                Icons.groups_rounded,
-                size: 100,
+            Text(
+              'CK',
+              style: TextStyle(
+                fontSize: 150,
+                fontWeight: FontWeight.w900,
                 color: Theme.of(context).colorScheme.primary,
               ),
+            ),
               const SizedBox(height: 6),
             Text(
               'CatKeys',

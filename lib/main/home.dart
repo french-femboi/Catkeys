@@ -200,10 +200,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   String _convertHashtagsToLinks(String text) {
     final hashtagRegex = RegExp(r'(\#[a-zA-Z0-9_]+)');
-    return text.replaceAllMapped(hashtagRegex, (match) {
+    final usernameRegex = RegExp(r'(\@[a-zA-Z0-9_]+)');
+    
+    String convertedText = text.replaceAllMapped(hashtagRegex, (match) {
       final hashtag = match.group(0);
       return '[$hashtag]($hashtag)'; // Markdown link format
     });
+    
+    convertedText = convertedText.replaceAllMapped(usernameRegex, (match) {
+      final username = match.group(0);
+      return '[$username]($username)'; // Markdown link format
+    });
+    
+    return convertedText;
   }
 
   lookupAccount() async {
@@ -571,6 +580,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                   ),
                   const PopupMenuItem(
+                    value: 'Announcements',
+                    child: Row(
+                      children: [
+                        Icon(Icons.announcement_rounded),
+                        SizedBox(width: 10),
+                        Text('Announcements'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
                     value: 'Log Out',
                     child: Row(
                       children: [
@@ -632,6 +651,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       );
                     },
                   );
+                }else if (value == 'Announcements') {
+                  vibrateSelection();
                 }
               },
             ),
@@ -731,7 +752,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   children: [
                                     ListTile(
                                       title: Text(
-                                        note.user.name ?? 'Unknown user',
+                                        note.user.name ?? note.user.username,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Theme.of(context)
@@ -773,7 +794,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                     // Handle hashtag tap event here
                                                     openLink("https://$url/tags/${post_url.substring(1)}");
                                                     // Navigate to a hashtag-specific screen or search
-                                                  } else {
+                                                  } else if (post_url.startsWith("@")) {
+                                                    // Handle hashtag tap event here
+                                                    openLink("https://$url/$post_url");
+                                                    // Navigate to a hashtag-specific screen or search
+                                                  }else {
                                                     openLink(
                                                         post_url); // Handle normal URLs
                                                   }
@@ -1133,6 +1158,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         ],
+                                        SizedBox(width: 2,),
                                         if (note.visibility ==
                                             NoteVisibility.followers) ...[
                                           Container(
@@ -1171,6 +1197,46 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         ],
+                                        SizedBox(width: 2,),
+                                        if (note.visibility ==
+                                            NoteVisibility.specified) ...[
+                                          Container(
+                                            padding: const EdgeInsets.only(
+                                                right:
+                                                    3.0), // Add padding only on the right side
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                width: 1.0,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.message_rounded,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                                Text(
+                                                  'Private note',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                        SizedBox(width: 2,),
                                         if (note.replyId != null) ...[
                                           Container(
                                             padding: const EdgeInsets.only(
@@ -1422,7 +1488,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  userName,
+                                    userName == 'null' ? userHandle : userName,
                                   style: TextStyle(
                                     fontSize: 30,
                                     fontWeight: FontWeight.bold,
@@ -1897,7 +1963,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   backgroundImage: CachedNetworkImageProvider(profilePicture),
                   radius: 16, // Adjust the radius to make the image smaller
                 ),
-                label: userName,
+                label: userName == 'null' ? userHandle : userName,
               ),
             ].where((destination) => destination != null).toList(),
           ),
