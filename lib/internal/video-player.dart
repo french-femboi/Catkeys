@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerPage extends StatefulWidget {
@@ -77,7 +79,24 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     }
   }
 
+    vibrateSelection() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+      final hasCustomVibrationsSupport =
+          await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+        Vibration.vibrate(duration: 50);
+      } else {
+        Vibration.vibrate();
+        await Future.delayed(const Duration(milliseconds: 50));
+        Vibration.vibrate();
+      }
+    }
+  }
+
   void _repeatVideo() {
+    vibrateSelection();
     if (mounted) {
       setState(() {
         _controller.seekTo(Duration.zero);
@@ -157,6 +176,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             IconButton(
               icon: const Icon(Icons.close, color: Colors.white),
               onPressed: () {
+                vibrateSelection();
                 Navigator.pop(context); // Close the video page
               },
             ),
@@ -191,6 +211,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                   size: 32,
                 ),
                 onPressed: () {
+                  vibrateSelection();
                   if (mounted) {
                     setState(() {
                       if (_controller.value.position != _controller.value.duration) {

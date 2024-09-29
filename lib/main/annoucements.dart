@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:misskey_dart/misskey_dart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 
 import '../main/home.dart';
 
@@ -98,6 +99,22 @@ class _AnnouncementsHomePageState extends State<AnnouncementsHomePage> {
     );
   }
 
+  vibrateSelection() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? status = prefs.getBool('catkeys_haptics');
+    if (status == true) {
+      final hasCustomVibrationsSupport =
+          await Vibration.hasCustomVibrationsSupport();
+      if (hasCustomVibrationsSupport != null && hasCustomVibrationsSupport) {
+        Vibration.vibrate(duration: 50);
+      } else {
+        Vibration.vibrate();
+        await Future.delayed(const Duration(milliseconds: 50));
+        Vibration.vibrate();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -117,6 +134,7 @@ class _AnnouncementsHomePageState extends State<AnnouncementsHomePage> {
             children: [
               GestureDetector(
                 onTap: () {
+                  vibrateSelection();
                   navHome();
                 },
                 child: Icon(
