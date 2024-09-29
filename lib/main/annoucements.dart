@@ -176,6 +176,15 @@ class _AnnouncementsHomePageState extends State<AnnouncementsHomePage> {
             ],
           ),
           automaticallyImplyLeading: false,
+          elevation: 0.0,
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(4.0), // height of the bottom border
+            child: Container(
+              color:
+                  Theme.of(context).colorScheme.primary, // color of the border
+              height: 2.0, // thickness of the border
+            ),
+          ),
         ),
         body: announcements.isEmpty
             ? Center(

@@ -158,6 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 fontSize: 150,
                 fontWeight: FontWeight.w900,
                 color: Theme.of(context).colorScheme.primary,
+                fontFamily: 'Bagel',
               ),
             ),
               const SizedBox(height: 6),

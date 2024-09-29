@@ -60,3 +60,6 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/inter.ttf
+    - family: Bagel
+      fonts:
+        - asset: assets/fonts/bagelfatone.ttf
