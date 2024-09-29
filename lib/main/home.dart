@@ -235,7 +235,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
                   return GestureDetector(
                     onTap: () {
-                      vibrateSelection(); 
+                      vibrateSelection();
                       _noteController.text +=
                           ':$emojiName:'; // Insert emoji name
                       Navigator.pop(context); // Close the dialog
@@ -727,6 +727,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               },
             ),
           ],
+          elevation: 0.0,
+          bottom: currentPageIndex != 0
+              ? PreferredSize(
+                  preferredSize:
+                      Size.fromHeight(4.0), // height of the bottom border
+                  child: Container(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary, // color of the border
+                    height: 2.0, // thickness of the border
+                  ),
+                )
+              : null,
         ),
         body: Center(
           child: Column(
@@ -1492,74 +1505,93 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           .min, // Ensure the Column doesn't expand infinitely
                       children: [
                         Container(
+                          height: 150, // Set a height for the banner
                           width: double.infinity,
-                          height: 200, // Set a fixed height for the banner
-                          child: Stack(
-                            fit: StackFit
-                                .expand, // Ensure the stack and its children fill the available space
-                            children: [
-                              // Banner image
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: CachedNetworkImageProvider(
-                                        profileBanner),
-                                    fit: BoxFit.cover,
-                                    alignment: Alignment.topCenter,
-                                  ),
-                                ),
-                              ),
-                              // Gradient overlay
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainer
-                                          .withOpacity(0.9),
-                                      Colors.transparent
-                                    ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                                ),
-                              ),
-                              // Content
-                              Column(
-                                children: [
-                                  const SizedBox(height: 30),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(width: 30),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .surfaceContainer,
-                                            width: 3,
-                                          ),
-                                        ),
-                                        child: CircleAvatar(
-                                          backgroundImage:
-                                              CachedNetworkImageProvider(
-                                                  ext_profilePicture),
-                                          radius: 65,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 30),
-                                ],
-                              ),
-                            ],
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: CachedNetworkImageProvider(profileBanner),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
+                            ),
                           ),
                         ),
+
+                        Column(
+                          children: [
+                            const SizedBox(height: 30),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const SizedBox(width: 30),
+                                // Profile Image
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      width: 3,
+                                    ),
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundImage: CachedNetworkImageProvider(
+                                        ext_profilePicture),
+                                    radius: 40,
+                                  ),
+                                ),
+                                const SizedBox(
+                                    width: 20), // Space between image and text
+                                // Username, handle, and status
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userName == 'null'
+                                          ? userHandle
+                                          : userName,
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      '@$userHandle',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      '@${ext_instance == "null" ? url : ext_instance}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            
+                          ],
+                        ),
+
                         const SizedBox(height: 20),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1568,32 +1600,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  userName == 'null' ? userHandle : userName,
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '@$userHandle - ${ext_instance == "null" ? url : ext_instance}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  'Status: ${userStatus == "OnlineStatus.online" ? "Online" : userStatus == "OnlineStatus.offline" ? "Offline" : userStatus == "OnlineStatus.active" ? "Active" : userStatus == "OnlineStatus.unknown" ? "Unknown" : userStatus}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
                                 const SizedBox(height: 10),
                                 const Divider(),
                                 const SizedBox(height: 5),
