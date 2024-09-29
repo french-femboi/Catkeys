@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:catkeys/internal/video-player.dart';
+import 'package:catkeys/main/annoucements.dart';
 import 'package:catkeys/main/settings.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
@@ -189,6 +190,45 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+void _showEmojiPicker(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0), // Adds padding inside the dialog
+          child: Container(
+            width: 300,
+            height: 300,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                crossAxisSpacing: 8.0,  // Adjust the spacing between columns
+                mainAxisSpacing: 8.0,    // Adjust the spacing between rows
+                childAspectRatio: 1.5,   // Adjust the size of the items
+              ),
+              itemCount: _customEmojis.length,
+              itemBuilder: (context, index) {
+                String emojiName = _customEmojis.keys.elementAt(index);
+                String emojiUrl = _customEmojis[emojiName]!;
+
+                return GestureDetector(
+                  onTap: () {
+                    _noteController.text += ':$emojiName:'; // Insert emoji name
+                    Navigator.pop(context); // Close the dialog
+                  },
+                  child: Image.network(emojiUrl), // Show emoji image
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
   String _replaceEmojis(String text) {
     String modifiedText = text;
     _customEmojis.forEach((emojiCode, emojiUrl) {
@@ -198,20 +238,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return modifiedText;
   }
 
-  String _convertHashtagsToLinks(String text) {
+  String _convertHUToLinks(String text) {
     final hashtagRegex = RegExp(r'(\#[a-zA-Z0-9_]+)');
     final usernameRegex = RegExp(r'(\@[a-zA-Z0-9_]+)');
-    
+
     String convertedText = text.replaceAllMapped(hashtagRegex, (match) {
       final hashtag = match.group(0);
       return '[$hashtag]($hashtag)'; // Markdown link format
     });
-    
+
     convertedText = convertedText.replaceAllMapped(usernameRegex, (match) {
       final username = match.group(0);
       return '[$username]($username)'; // Markdown link format
     });
-    
+
     return convertedText;
   }
 
@@ -497,6 +537,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  navAnnoucements() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AnnouncementsPage()),
+    );
+  }
+
   navProfile() {
     currentPageIndex = 3;
   }
@@ -651,8 +698,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       );
                     },
                   );
-                }else if (value == 'Announcements') {
+                } else if (value == 'Announcements') {
                   vibrateSelection();
+                  navAnnoucements();
                 }
               },
             ),
@@ -769,10 +817,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             MarkdownBody(
                                               data: note.text?.isNotEmpty ==
                                                       true
-                                                  ? _convertHashtagsToLinks(
+                                                  ? _convertHUToLinks(
                                                       _replaceEmojis(
                                                           note.text ?? ''))
-                                                  : _convertHashtagsToLinks(
+                                                  : _convertHUToLinks(
                                                       _replaceEmojis(note
                                                               .renote?.text ??
                                                           'No content available')),
@@ -787,18 +835,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                       .primary, // Links in green
                                                 ),
                                               ),
-                                              onTapLink: (text, post_url, title) {
+                                              onTapLink:
+                                                  (text, post_url, title) {
                                                 if (post_url != null) {
                                                   vibrateSelection();
-                                                  if (post_url.startsWith("#")) {
+                                                  if (post_url
+                                                      .startsWith("#")) {
                                                     // Handle hashtag tap event here
-                                                    openLink("https://$url/tags/${post_url.substring(1)}");
+                                                    openLink(
+                                                        "https://$url/tags/${post_url.substring(1)}");
                                                     // Navigate to a hashtag-specific screen or search
-                                                  } else if (post_url.startsWith("@")) {
+                                                  } else if (post_url
+                                                      .startsWith("@")) {
                                                     // Handle hashtag tap event here
-                                                    openLink("https://$url/$post_url");
+                                                    openLink(
+                                                        "https://$url/$post_url");
                                                     // Navigate to a hashtag-specific screen or search
-                                                  }else {
+                                                  } else {
                                                     openLink(
                                                         post_url); // Handle normal URLs
                                                   }
@@ -1158,7 +1211,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         ],
-                                        SizedBox(width: 2,),
+                                        SizedBox(
+                                          width: 2,
+                                        ),
                                         if (note.visibility ==
                                             NoteVisibility.followers) ...[
                                           Container(
@@ -1197,7 +1252,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         ],
-                                        SizedBox(width: 2,),
+                                        SizedBox(
+                                          width: 2,
+                                        ),
                                         if (note.visibility ==
                                             NoteVisibility.specified) ...[
                                           Container(
@@ -1236,7 +1293,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         ],
-                                        SizedBox(width: 2,),
+                                        SizedBox(
+                                          width: 2,
+                                        ),
                                         if (note.replyId != null) ...[
                                           Container(
                                             padding: const EdgeInsets.only(
@@ -1488,7 +1547,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    userName == 'null' ? userHandle : userName,
+                                  userName == 'null' ? userHandle : userName,
                                   style: TextStyle(
                                     fontSize: 30,
                                     fontWeight: FontWeight.bold,
@@ -1784,15 +1843,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  TextField(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Note',
-                                      border: OutlineInputBorder(),
-                                    ),
-                                    maxLines: null,
-                                    controller: _noteController,
-                                    scrollPhysics:
-                                        const NeverScrollableScrollPhysics(),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              decoration: const InputDecoration(
+                                                labelText: 'Note',
+                                                border: OutlineInputBorder(),
+                                              ),
+                                              maxLines: null,
+                                              controller: _noteController,
+                                              scrollPhysics:
+                                                  const NeverScrollableScrollPhysics(),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                                Icons.emoji_emotions),
+                                            onPressed: () {
+                                              vibrateSelection();
+                                              _showEmojiPicker(
+                                                  context); // Open the emoji picker
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 8),
                                   const Divider(),
