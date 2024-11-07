@@ -1463,6 +1463,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                         ],
                                       ],
                                     ),
+                                    Row(
+                                      children: [
+                                      IconButton(
+                                        icon: Icon(
+                                        Icons.add_reaction_rounded,
+                                        color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                        ),
+                                        onPressed: () {
+                                        vibrateSelection();
+                                        // Add your reaction handling code here
+                                        },
+                                      ),
+                                    if (note.reactions != null && note.reactions!.isNotEmpty) ...[
+                                      Text(
+                                      note.reactions!.length == 1
+                                        ? 'One person has reacted'
+                                        : '${note.reactions!.length} people have reacted',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.secondary,
+                                      ),
+                                      ),
+                                    ] else ...[
+                                      Text(
+                                      'No one has reacted',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.secondary,
+                                      ),
+                                      ),
+                                    ],
+                                      ],
+                                    ),
                                     const Divider(),
                                   ],
                                 );
