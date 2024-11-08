@@ -329,7 +329,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         userLang = res.lang.toString();
       });
     } catch (e) {
-      print('Error: $e'); // Catch and print any errors
+      if (kDebugMode) {
+        print('Error: $e');
+      } // Catch and print any errors
     }
   }
 
