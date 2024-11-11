@@ -666,13 +666,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
           backgroundColor:
               Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          title: Text(
+            title: Text(
             widget.title,
             style: TextStyle(
               fontWeight: FontWeight.bold,
+              fontFamily: 'Bagel',
               color: Theme.of(context).colorScheme.primary,
             ),
-          ),
+            ),
           automaticallyImplyLeading: false, // Remove back button
           actions: [
             PopupMenuButton(
